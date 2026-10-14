@@ -14,7 +14,8 @@
       "subtotal_lkr": 12500,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/microbit-v2-board/",
-      "note": "MB1037-1; board-only"
+      "note": "MB1037-1; board-only",
+      "purchase_link_type": "product"
     },
     {
       "category": "A",
@@ -24,8 +25,10 @@
       "unit_lkr": 100,
       "subtotal_lkr": 200,
       "price_basis": "E",
-      "url": "",
-      "note": "Replaces edge breakout; cover unused 3V ring to prevent accidental 5V contact"
+      "url": "https://tronic.lk/product/crocodile-clip-small-2pcs-red-and-black",
+      "note": "Replaces edge breakout; cover unused 3V ring to prevent accidental 5V contact TA0033 is a two-clip pack, not finished male-ended leads: buy one pack and solder two existing male jumper wires to the clips; insulate joints and check continuity.",
+      "purchase_link_type": "components",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "A",
@@ -36,7 +39,8 @@
       "subtotal_lkr": 5990,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/duino-obstacle-avoidance-smart-robot-car-kit/",
-      "note": "Duino-Kit-05 base variant; see included-parts list below; confirm four-AA holder"
+      "note": "Duino-Kit-05 base variant; see included-parts list below; confirm four-AA holder",
+      "purchase_link_type": "product"
     },
     {
       "category": "A",
@@ -47,7 +51,8 @@
       "subtotal_lkr": 1980,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/arduino-compatible-nano-v3-0/",
-      "note": "MB1006-A; confirm fitted headers; USB-C cables separately budgeted"
+      "note": "MB1006-A; confirm fitted headers; USB-C cables separately budgeted",
+      "purchase_link_type": "product"
     },
     {
       "category": "A",
@@ -57,8 +62,10 @@
       "unit_lkr": 200,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "Order holder-only, not a micro:bit Go bundle"
+      "url": "https://tronic.lk/product/battery-holder-case-2xaaa-3v-ph2-0-for-microbit-microbi",
+      "note": "Order holder-only, not a micro:bit Go bundle Tronic BA0216: holder-only, PH2.0, listed LKR 160 each; confirm polarity.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "A",
@@ -68,8 +75,10 @@
       "unit_lkr": 200,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "For both micro:bits"
+      "url": "https://tronic.lk/product/usb-to-microusb-data-cable-30cm",
+      "note": "For both micro:bits Tronic TA1422: USB data cable, listed LKR 100 each.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "A",
@@ -79,8 +88,10 @@
       "unit_lkr": 200,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "For both Nanos; Uno cables included above/in kit"
+      "url": "https://tronic.lk/product/celebrat-cb-24-usb-data-cable-usb-a-to-type-c-fast-char",
+      "note": "For both Nanos; Uno cables included above/in kit Tronic TA1678 explicitly supports data; listed LKR 700 each, above the LKR 200 allowance.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -91,7 +102,8 @@
       "subtotal_lkr": 1390,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/908-adjustable-soldering-60w/",
-      "note": "TS0186; stand purchased separately; confirm local voltage/plug"
+      "note": "TS0186; stand purchased separately; confirm local voltage/plug",
+      "purchase_link_type": "product"
     },
     {
       "category": "B",
@@ -101,8 +113,16 @@
       "unit_lkr": 400,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": ""
+      "url": "https://tronic.lk/product/soldering-iron-stand-square",
+      "note": "Tronic TA0048 stand, listed LKR 300; confirm cleaning sponge included, otherwise add a cleaner from the linked supplier category (request ACS4352-A) within a revised quote.",
+      "purchase_link_type": "components",
+      "purchase_link_checked": "2026-10-14",
+      "additional_purchase_links": [
+        {
+          "label": "Sponge/cleaner category — request ACS4352-A",
+          "url": "https://www.duino.lk/product-category/related-accessories/soldering-accessories/"
+        }
+      ]
     },
     {
       "category": "B",
@@ -112,8 +132,10 @@
       "unit_lkr": 400,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "Replaces heated desoldering pump"
+      "url": "https://tronic.lk/product/l138-desoldering-pump-sucker",
+      "note": "Replaces heated desoldering pump Tronic TA0039 manual pump, listed LKR 200.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -123,8 +145,10 @@
       "unit_lkr": 450,
       "subtotal_lkr": 450,
       "price_basis": "E",
-      "url": "",
-      "note": "Quote electronics-grade flux-core alloy and handling requirements; replenish in later terms"
+      "url": "https://transasia.lk/product/relife-rl-440-0-3mm-soldering-wire-alloy-20-80-20g/",
+      "note": "Quote electronics-grade flux-core alloy and handling requirements; replenish in later terms Trans Asia RL-440: 20g, listed LKR 375; verify rosin/flux core and alloy suitability. A higher-tin electronics solder is preferable if quoted within budget.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -135,7 +159,8 @@
       "subtotal_lkr": 1390,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/60w-glue-gun-nozzle-sd-a6/",
-      "note": "TS0169-A; supplier specifies 11mm sticks"
+      "note": "TS0169-A; supplier specifies 11mm sticks",
+      "purchase_link_type": "product"
     },
     {
       "category": "B",
@@ -145,8 +170,10 @@
       "unit_lkr": 50,
       "subtotal_lkr": 500,
       "price_basis": "E",
-      "url": "",
-      "note": "Do not buy the previous 7mm or nominal 10mm refills"
+      "url": "https://alphatronic.lk/product/glue-stick-11mm/",
+      "note": "Do not buy the previous 7mm or nominal 10mm refills Alphatronic 11mm sticks, listed LKR 60 each, above the LKR 50 allowance; buy 10 and verify diameter tolerance with the gun.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -157,7 +184,8 @@
       "subtotal_lkr": 860,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/wire-stripper-crimper-cutter-pliers/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "B",
@@ -168,7 +196,8 @@
       "subtotal_lkr": 1780,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/digital-multimeter-dt-830d/",
-      "note": "Low-voltage workshop use; confirm batteries included or use power allowance"
+      "note": "Low-voltage workshop use; confirm batteries included or use power allowance",
+      "purchase_link_type": "product"
     },
     {
       "category": "B",
@@ -178,8 +207,10 @@
       "unit_lkr": 350,
       "subtotal_lkr": 700,
       "price_basis": "E",
-      "url": "",
-      "note": "Two students at the supervised soldering bench at a time"
+      "url": "https://elecshop.lk/product/ingco-safety-goggles-hsg02-in-sri-lanka-lowest-price/",
+      "note": "Two students at the supervised soldering bench at a time Elecshop Ingco HSG02 goggles, listed LKR 650 each, above the LKR 350 allowance; check student fit.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -189,8 +220,10 @@
       "unit_lkr": 300,
       "subtotal_lkr": 300,
       "price_basis": "E",
-      "url": "",
-      "note": ""
+      "url": "https://tronic.lk/product/solder-mat-heat-resistant-repair-station-28x20x0-5cm",
+      "note": "Tronic TA0328 soldering mat, listed LKR 1,100, above the LKR 300 allowance; not a thin heatsink thermal pad.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -200,8 +233,10 @@
       "unit_lkr": 300,
       "subtotal_lkr": 300,
       "price_basis": "E",
-      "url": "",
-      "note": "School provides scissors/ruler as well"
+      "url": "https://tronic.lk/product/precision-screwdriver-tool-set-32-in-1-6011-a",
+      "note": "School provides scissors/ruler as well Tronic TA1255 precision screwdriver set, listed LKR 350, above the LKR 300 allowance; school supplies scissors and ruler.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "B",
@@ -211,8 +246,10 @@
       "unit_lkr": 300,
       "subtotal_lkr": 300,
       "price_basis": "E",
-      "url": "",
-      "note": "Separate organizer replaces the starter-kit container"
+      "url": "https://tronic.lk/product/component-box-6-way",
+      "note": "Separate organizer replaces the starter-kit container Tronic EN0013 six-compartment box, listed LKR 300; use labelled small bags to separate additional resistor values.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -223,7 +260,8 @@
       "subtotal_lkr": 1060,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "C",
@@ -234,7 +272,8 @@
       "subtotal_lkr": 380,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/jumper-wire-male-to-male-20cm-40pcs/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "C",
@@ -245,7 +284,8 @@
       "subtotal_lkr": 360,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "C",
@@ -256,7 +296,8 @@
       "subtotal_lkr": 180,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/jumper-wire-female-to-female-20cm-40pcs/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "C",
@@ -266,8 +307,10 @@
       "unit_lkr": 400,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "Motor supply wire and flexible soldered piezo leads; quote sufficient length"
+      "url": "https://www.daraz.lk/products/10-colors-16-18-20-22-24-26-28-30-gauge-silicone-electrical-wire-10-ft-each-color-22-awg-stranded-tinned-copper-hookup-wire-kit-i616561192.html",
+      "note": "Motor supply wire and flexible soldered piezo leads; quote sufficient length Daraz.lk wire-kit listing: select 22AWG STRANDED copper and sufficient red/black length. Confirm seller location, delivery, variant and price; imported packs may exceed the allowance. Ask a local electronics supplier for a cut-length quote as an alternative.",
+      "purchase_link_type": "marketplace",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -277,8 +320,10 @@
       "unit_lkr": 300,
       "subtotal_lkr": 300,
       "price_basis": "E",
-      "url": "",
-      "note": ""
+      "url": "https://www.duino.lk/product/heat-shrink-sleeve-heat-shrink-tube/",
+      "note": "Duino heat-shrink tubing is sold by length and diameter; select sizes that fit the joints and insulation. The allowance is for a small mixed-size lot, not one unspecified tube.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -288,8 +333,10 @@
       "unit_lkr": 100,
       "subtotal_lkr": 200,
       "price_basis": "E",
-      "url": "",
-      "note": "Consumed by project 20"
+      "url": "https://tronic.lk/product/crocodile-clip-small-2pcs-red-and-black",
+      "note": "Consumed by project 20 Tronic TA0033 is one red/black clip PAIR, listed LKR 30 per pack; make two probe leads using C05 wire, insulate and add strain relief. This is a separate pair from A02.",
+      "purchase_link_type": "components",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -299,8 +346,10 @@
       "unit_lkr": 200,
       "subtotal_lkr": 200,
       "price_basis": "E",
-      "url": "",
-      "note": "Consumed by project 20; not the shared organizer"
+      "url": "https://www.duino.lk/product/158x900x47mm-plastic-abs-project-box-enclosure/",
+      "note": "Consumed by project 20; not the shared organizer Duino ACS4146: 158×90×47mm ABS box; listed LKR 890, above the LKR 200 allowance. Confirm space for the 9V battery, alarm and switch before drilling.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -310,8 +359,10 @@
       "unit_lkr": 100,
       "subtotal_lkr": 200,
       "price_basis": "E",
-      "url": "",
-      "note": "Matched to the 5V adapters; verify centre-positive polarity"
+      "url": "https://tronic.lk/product/dc-jack-barrel-connector-female-power-terminal-5-5x2-1m",
+      "note": "Matched to the 5V adapters; verify centre-positive polarity Tronic CN0034 female 5.5×2.1mm screw-terminal socket, listed LKR 30 each; verify centre-positive polarity.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -321,8 +372,16 @@
       "unit_lkr": 300,
       "subtotal_lkr": 300,
       "price_basis": "E",
-      "url": "",
-      "note": "For power bank peripheral rail; no PD voltage trigger"
+      "url": "https://www.duino.lk/product/usb-to-dc-5-5mm-cable-usb-2-0-a/",
+      "note": "For power bank peripheral rail; no PD voltage trigger Use Duino CW0764 USB-A to 5.5×2.1mm 5V cable (listed LKR 240) PLUS one additional CN0034 screw-terminal socket (listed LKR 30): about LKR 270 before shipping. This third socket belongs to this assembly; do not subtract it from the two C09 sockets. Confirm cable current rating for servo peaks; no 9V/12V boost converter.",
+      "purchase_link_type": "components",
+      "purchase_link_checked": "2026-10-14",
+      "additional_purchase_links": [
+        {
+          "label": "Additional CN0034 socket",
+          "url": "https://tronic.lk/product/dc-jack-barrel-connector-female-power-terminal-5-5x2-1m"
+        }
+      ]
     },
     {
       "category": "C",
@@ -332,8 +391,10 @@
       "unit_lkr": 50,
       "subtotal_lkr": 100,
       "price_basis": "E",
-      "url": "",
-      "note": "One motor switch rated ≥2A DC; one tester switch"
+      "url": "https://www.duino.lk/product/on-off-2pin-g130-boat-rocker-switch/",
+      "note": "One motor switch rated ≥2A DC; one tester switch Duino two-terminal ON/OFF switch is listed LKR 40; confirm at least 2A DC rating for the motor branch. The advertised AC rating alone does not establish its DC rating.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "C",
@@ -343,8 +404,16 @@
       "unit_lkr": 200,
       "subtotal_lkr": 200,
       "price_basis": "E",
-      "url": "",
-      "note": "For four-AA motor branch"
+      "url": "https://www.daraz.lk/products/globaltrendz5-pcs-screw-type-20-awg-wire-5-x-20mm-inline-fuse-holder-home-protection-inline-fuse-holder-copper-wire-components-5a-220v-520-i551090595.html",
+      "note": "For four-AA motor branch Daraz.lk 5×20mm inline-holder listing is a five-pack: confirm delivery/origin and price. Fit a separately linked 2A 5×20mm fuse, NOT a supplied 5A fuse. Buy one matching 2A fuse pack for the installed fuse and spare; combined purchase may exceed the LKR 200 allowance.",
+      "purchase_link_type": "marketplace-components",
+      "purchase_link_checked": "2026-10-14",
+      "additional_purchase_links": [
+        {
+          "label": "2A 5×20mm fuse pack (select 2A)",
+          "url": "https://www.duino.lk/product/2a-250vac-glass-fuse-5x20mm-10pcs/"
+        }
+      ]
     },
     {
       "category": "D",
@@ -355,7 +424,8 @@
       "subtotal_lkr": 550,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/ultrasonic-distance-measuring-transducer/",
-      "note": "Plus one in robot kit: total three"
+      "note": "Plus one in robot kit: total three",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -366,7 +436,8 @@
       "subtotal_lkr": 700,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/servo-motor-sg90-9g/",
-      "note": "Plus one in robot kit: total three; ordinary positional type"
+      "note": "Plus one in robot kit: total three; ordinary positional type",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -377,7 +448,8 @@
       "subtotal_lkr": 380,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/lcd-16x02-display-blue/",
-      "note": ""
+      "note": "",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -388,7 +460,8 @@
       "subtotal_lkr": 210,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/iici2c-twi-spi-serial-interface-module-for-1602-1604-2004lcd/",
-      "note": "Solder assembly required; hd44780 library"
+      "note": "Solder assembly required; hd44780 library",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -399,7 +472,8 @@
       "subtotal_lkr": 230,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/dht11-temperature-and-humidity-sensor-module/",
-      "note": "Verify pin order/data pull-up"
+      "note": "Verify pin order/data pull-up",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -410,7 +484,8 @@
       "subtotal_lkr": 220,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/gl12528-12mm-light-sensitive-resistor-ldr/",
-      "note": "SEN1524-1; replaces ambiguous digital sensor modules"
+      "note": "SEN1524-1; replaces ambiguous digital sensor modules",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -421,7 +496,8 @@
       "subtotal_lkr": 220,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/relay-board-module-5v-1-channel/",
-      "note": "Only low-voltage demonstration loads"
+      "note": "Only low-voltage demonstration loads",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -432,7 +508,8 @@
       "subtotal_lkr": 400,
       "price_basis": "E",
       "url": "https://www.duino.lk/product/piezo-ceramic-copper-buzzer-35mm/",
-      "note": "Product identity found, live price unavailable; no oscillator; reusable tone/knock parts"
+      "note": "Product identity found, live price unavailable; no oscillator; reusable tone/knock parts",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -443,7 +520,8 @@
       "subtotal_lkr": 290,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/dc-3-24v-electronic-buzzer/",
-      "note": "Only project 20; not direct Arduino GPIO or knock sensor"
+      "note": "Only project 20; not direct Arduino GPIO or knock sensor",
+      "purchase_link_type": "product"
     },
     {
       "category": "D",
@@ -454,7 +532,8 @@
       "subtotal_lkr": 780,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/hc-06-bluetooth-rf-transceiver-module-slave/",
-      "note": "RX logic needs resistor divider"
+      "note": "RX logic needs resistor divider",
+      "purchase_link_type": "product"
     },
     {
       "category": "E",
@@ -464,8 +543,10 @@
       "unit_lkr": 35,
       "subtotal_lkr": 350,
       "price_basis": "E",
-      "url": "",
-      "note": "Explicit colour/quantity; not an unverified assortment link"
+      "url": "https://tronic.lk/product/led-5mm-red-clear-pack-approx-10pcs",
+      "note": "Explicit colour/quantity; not an unverified assortment link. Tronic LQ0007: buy ONE approximately 10-LED red clear pack, not 10 packs; listed LKR 50 per pack. Confirm actual count.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -475,8 +556,10 @@
       "unit_lkr": 35,
       "subtotal_lkr": 140,
       "price_basis": "E",
-      "url": "",
-      "note": ""
+      "url": "https://tronic.lk/product/led-5mm-yellow-diffused-pack-approx-10pcs",
+      "note": "Tronic LQ0004: buy ONE approximately 10-LED yellow pack for the four required LEDs; listed LKR 50 per pack.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -486,8 +569,10 @@
       "unit_lkr": 35,
       "subtotal_lkr": 210,
       "price_basis": "E",
-      "url": "",
-      "note": ""
+      "url": "https://tronic.lk/product/led-5mm-green-diffused-pack-approx-10pcs",
+      "note": "Tronic LQ0002: buy ONE approximately 10-LED green pack for the six required LEDs; listed LKR 50 per pack.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -497,8 +582,10 @@
       "unit_lkr": 5,
       "subtotal_lkr": 150,
       "price_basis": "E",
-      "url": "",
-      "note": "LED current limiting, piezo drive, HC-06 divider and project 20"
+      "url": "https://tronic.lk/product/1k-14w-resistor-pack-carbon-film-tht-5-approx-40pcs",
+      "note": "LED current limiting, piezo drive, HC-06 divider and project 20 Tronic RP0035: buy ONE approximately 40-resistor pack for the 30 required parts; listed LKR 50 per pack; through-hole 1/4W.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -508,8 +595,10 @@
       "unit_lkr": 5,
       "subtotal_lkr": 50,
       "price_basis": "E",
-      "url": "",
-      "note": "LDR dividers, DHT pull-up and knock series protection"
+      "url": "https://tronic.lk/product/10k-14w-resistor-pack-carbon-film-tht-5-approx-40pcs",
+      "note": "LDR dividers, DHT pull-up and knock series protection Tronic RP0047: buy ONE approximately 40-resistor pack for the 10 required parts; listed LKR 50 per pack; through-hole 1/4W.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -519,8 +608,10 @@
       "unit_lkr": 10,
       "subtotal_lkr": 20,
       "price_basis": "E",
-      "url": "",
-      "note": "Piezo bleed resistor; one spare"
+      "url": "https://tronic.lk/product/1m-14w-resistor-pack-carbon-film-tht-5-approx-40pcs",
+      "note": "Piezo bleed resistor; one spare Tronic RP0071: buy ONE approximately 40-resistor pack for the two required parts; listed LKR 50 per pack, above this row's LKR 20 allowance; fixed resistor, not a preset.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -530,8 +621,10 @@
       "unit_lkr": 30,
       "subtotal_lkr": 120,
       "price_basis": "E",
-      "url": "",
-      "note": "Two knock-input clamps plus spares; verify part/polarity"
+      "url": "https://www.daraz.lk/products/50pcs-bat85-do35-schottky-diode-i189031201.html",
+      "note": "Two knock-input clamps plus spares; verify part/polarity Daraz.lk BAT85 DO-35 listing is a 50-pack for four required diodes. Search listing found; checkout page/price/stock could not be verified. Confirm seller, lead time and exact BAT85 part before ordering; request a local small-quantity quote as an alternative.",
+      "purchase_link_type": "marketplace",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -541,8 +634,10 @@
       "unit_lkr": 50,
       "subtotal_lkr": 150,
       "price_basis": "E",
-      "url": "",
-      "note": "Servo supply reservoir; observe polarity"
+      "url": "https://tronic.lk/product/original-samwha-470uf-16v-electrolytic-capacitor-tht",
+      "note": "Servo supply reservoir; observe polarity Tronic CA0223: 470µF 16V through-hole capacitor, listed LKR 30 each; buy three and observe polarity.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -552,8 +647,10 @@
       "unit_lkr": 10,
       "subtotal_lkr": 40,
       "price_basis": "E",
-      "url": "",
-      "note": "Motor suppression; two plus spares"
+      "url": "https://tronic.lk/product/100nf-50v-ceramic-capacitor-tht",
+      "note": "Motor suppression; two plus spares Tronic CA0002: 100nF 50V through-hole ceramic capacitor, listed LKR 2 each; buy four, not an SMD capacitor.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "E",
@@ -564,7 +661,8 @@
       "subtotal_lkr": 300,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/tactile-push-button-switch-4pins-12x12x7-3mm/",
-      "note": "Use opposite switched legs; check physical fit"
+      "note": "Use opposite switched legs; check physical fit",
+      "purchase_link_type": "product"
     },
     {
       "category": "F",
@@ -575,7 +673,8 @@
       "subtotal_lkr": 1380,
       "price_basis": "S",
       "url": "https://www.duino.lk/product/5v-2a-3pin-ac-dc-smps-power-adaptor/",
-      "note": "PS3539-A; powers peripheral rails, not Uno Vin/barrel"
+      "note": "PS3539-A; powers peripheral rails, not Uno Vin/barrel",
+      "purchase_link_type": "product"
     },
     {
       "category": "F",
@@ -585,8 +684,10 @@
       "unit_lkr": 2500,
       "subtotal_lkr": 2500,
       "price_basis": "E",
-      "url": "",
-      "note": "Quote reputable bank/idle behaviour; USB chargers and cable for charging included in this allowance"
+      "url": "https://lifemobile.lk/product/aspor-a323-10000mah-powerbank/",
+      "note": "Quote reputable bank/idle behaviour; USB chargers and cable for charging included in this allowance Life Mobile Aspor A323: two USB outputs specified 5V/2A; listed LKR 3,988, above the LKR 2,500 allowance. Confirm simultaneous total output, idle shutoff, charging cable and charger; those accessories are not established as included.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "F",
@@ -596,8 +697,10 @@
       "unit_lkr": 100,
       "subtotal_lkr": 400,
       "price_basis": "E",
-      "url": "",
-      "note": "Two per micro:bit; initial set"
+      "url": "https://tronic.lk/product/1-5v-aaa-battery-alkaline-2pcs-good-quality",
+      "note": "Two per micro:bit; initial set Tronic BA0061: buy TWO two-cell packs for four AAA cells; listed LKR 530 per pair, above the row's LKR 400 total allowance. Select 1.5V alkaline, not 1.2V rechargeable.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "F",
@@ -607,8 +710,10 @@
       "unit_lkr": 100,
       "subtotal_lkr": 800,
       "price_basis": "E",
-      "url": "",
-      "note": "Four for robot motor pack, four spares; not rechargeable in this plan"
+      "url": "https://tronic.lk/product/1-5v-aa-battery-alkaline-2pcs-good-quality",
+      "note": "Four for robot motor pack, four spares; not rechargeable in this plan Tronic BA0066: buy FOUR two-cell packs for eight AA cells; listed LKR 530 per pair, above the row's LKR 800 total allowance. Select 1.5V alkaline.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "F",
@@ -618,8 +723,10 @@
       "unit_lkr": 300,
       "subtotal_lkr": 900,
       "price_basis": "E",
-      "url": "",
-      "note": "One tester battery and two multimeter batteries if needed; not motor power"
+      "url": "https://tronic.lk/product/kodak-9v-max-super-alkaline-battery-6lr61-original",
+      "note": "One tester battery and two multimeter batteries if needed; not motor power Tronic BA0206: 9V 6LR61 alkaline PP3, listed LKR 850 each, above the LKR 300 allowance. Buy three only if both multimeters need separate batteries; never use these for drive motors.",
+      "purchase_link_type": "product",
+      "purchase_link_checked": "2026-10-14"
     },
     {
       "category": "F",
@@ -630,7 +737,10 @@
       "subtotal_lkr": 50,
       "price_basis": "P",
       "url": "https://www.duino.lk/product/9v-battery-snap-on-connector-clip/",
-      "note": "Tester clip plus spare; not board power"
+      "note": "Tester clip plus spare; not board power",
+      "purchase_link_type": "product"
     }
-  ]
+  ],
+  "purchase_links_added": "2026-10-14",
+  "budget_status": "Planning allowances retained; linked retail basket has not been repriced or confirmed within LKR 50,000. Obtain quotes, pack quantities and shipping before purchase."
 }

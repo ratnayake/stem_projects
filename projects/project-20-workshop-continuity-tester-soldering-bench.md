@@ -43,7 +43,7 @@ This standalone circuit has no microcontroller. Use **1kΩ**, not 220Ω: at appr
                                                                active buzzer (-) -- 9V (-)
 ```
 
-Use only on loose, **disconnected and unpowered** cables. The probes apply battery voltage and are not suitable for testing connected semiconductor circuits, USB electronics, mains wiring or powered equipment. Keep the battery unplugged during assembly.
+Use only on loose, **disconnected and unpowered** cables. If buying the linked C07 clip pair, first solder flexible C05 hookup wires to the two clips, insulate the joints and add strain relief to make the probe leads. The probes apply battery voltage and are not suitable for testing connected semiconductor circuits, USB electronics, mains wiring or powered equipment. Keep the battery unplugged during assembly.
 
 ## Build, test and acceptance checks
 

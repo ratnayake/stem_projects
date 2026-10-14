@@ -38,6 +38,8 @@ Power the board through its USB socket. Power the SG90 red lead from the separat
 | Servo red | External regulated +5V |
 | Servo brown | External negative and micro:bit GND ring through insulated lead |
 
+The purchase link for A02 supplies two insulated crocodile clips. With all power disconnected, solder one existing male-ended jumper to each clip, insulate the joints and check continuity with the multimeter. Make this pair before wiring the servo.
+
 Connect only the large P0 and GND rings through insulated leads. Cover the unused 3V ring and prevent clips from touching adjacent rings. Do not clip servo power to the micro:bit. If a particular SG90 does not accept 3V logic, obtain a compatible servo or a suitable signal buffer before proceeding.
 
 ## Complete source code
