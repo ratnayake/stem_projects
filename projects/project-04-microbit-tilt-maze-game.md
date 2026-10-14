@@ -1,52 +1,39 @@
-# Project 04: Tilt-Controlled Maze Game with Audio FX
+# Project 04: Tilt-Controlled Grid Maze with Audio
 
-**Track:** BBC Micro:bit Interactive Computing  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 1–2 Students  
+**Platform:** micro:bit V2
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-In this project, students program a video game on the Micro:bit that transforms the board into a handheld physics-based gaming console. Students control a bright pixel "marble" on the 5x5 LED screen by physically tilting the board in 3D space. The goal is to steer the marble past deadly "hole" obstacles to reach the blinking target goal while sound effects play through the built-in speaker.
+**Estimated session:** 60 minutes
 
-```mermaid
-flowchart LR
-    Tilt["Physical Board Tilt (Pitch & Roll)"] --> ReadAccel["Read Acceleration (X, Y)"]
-    ReadAccel --> UpdatePos["Calculate Velocity & New Pixel Coordinate"]
-    UpdatePos --> CheckBoundary{"Collision Check"}
-    
-    CheckBoundary -->|Hit Obstacle| Explode["Explosion Sound + Reset Level"]
-    CheckBoundary -->|Hit Goal| Win["Fanfare Tone + Advance Score"]
-    CheckBoundary -->|Open Space| Render["Render Marble at (X, Y)"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Computer Game Physics:** Simulating gravity, momentum, velocity damping, bounding box collisions.
-- **Cartesian Coordinates:** Mapping continuous analog vectors (±1024 milli-g) onto a 5x5 discrete matrix grid (0,0 to 4,4).
-- **Game Loops:** Frame rate management, non-blocking asynchronous audio synthesis.
+## What students build
 
----
+Tilt moves the bright player one grid cell per update. Reach the blinking goal while avoiding the dim hazard. This is discrete grid movement, not a momentum simulation. A displays the score between levels.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| BBC Micro:bit V2 Board | 1 | [Duino.lk Micro:bit V2](https://www.duino.lk/product/microbit-v2-board/) |
-| AAA Battery Holder (2x AAA 3V) | 1 | [Duino.lk Battery Holder](https://www.duino.lk/product/microbit-v2-go-microbit-bundle/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Setup
-No external wiring. Powered portably by the 2x AAA battery pack.
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| micro:bit V2 | 1 |
+| micro-USB data cable | 1 |
+| 2×AAA holder and AAA cells | optional portable supply |
 
----
 
-## 5. Source Code (MakeCode Python)
+## Complete wiring and power
+
+No external wiring. Hold the board flat and test which physical tilt direction corresponds to each axis.
+
+## Complete source code
+
+Use the **Python editor in [MakeCode for micro:bit](https://makecode.microbit.org)**, not MicroPython. Select V2 hardware when testing microphone/speaker behaviour.
 
 ```python
-# Project 04: Tilt-Controlled Marble Maze Game
 player_x = 0
 player_y = 0
 goal_x = 4
@@ -55,7 +42,7 @@ hazard_x = 2
 hazard_y = 2
 score = 0
 
-def init_level():
+def new_level():
     global player_x, player_y, goal_x, goal_y, hazard_x, hazard_y
     player_x = 0
     player_y = 0
@@ -63,78 +50,55 @@ def init_level():
     goal_y = randint(2, 4)
     hazard_x = randint(1, 3)
     hazard_y = randint(1, 3)
-    # Ensure hazard is not placed directly on player or goal
-    if hazard_x == goal_x and hazard_y == goal_y:
-        hazard_x = 1
+    while hazard_x == goal_x and hazard_y == goal_y:
+        hazard_x = randint(1, 3)
+        hazard_y = randint(1, 3)
+new_level()
 
-init_level()
+def show_score():
+    basic.show_number(score)
+input.on_button_pressed(Button.A, show_score)
 
-def on_forever():
+def game():
     global player_x, player_y, score
-    
-    # Read tilt angles
     ax = input.acceleration(Dimension.X)
     ay = input.acceleration(Dimension.Y)
-    
-    # Move horizontally based on roll
-    if ax > 250 and player_x < 4:
-        player_x += 1
-        music.play(music.tone_playable(262, music.beat(BeatFraction.SIXTEENTH)), music.PlaybackMode.IN_BACKGROUND)
-    elif ax < -250 and player_x > 0:
-        player_x -= 1
-        music.play(music.tone_playable(262, music.beat(BeatFraction.SIXTEENTH)), music.PlaybackMode.IN_BACKGROUND)
-        
-    # Move vertically based on pitch
-    if ay > 250 and player_y < 4:
-        player_y += 1
-        music.play(music.tone_playable(294, music.beat(BeatFraction.SIXTEENTH)), music.PlaybackMode.IN_BACKGROUND)
-    elif ay < -250 and player_y > 0:
-        player_y -= 1
-        music.play(music.tone_playable(294, music.beat(BeatFraction.SIXTEENTH)), music.PlaybackMode.IN_BACKGROUND)
-        
-    # Check collision with Hazard
+    # Move one axis per update so diagonal jumps cannot skip a hazard.
+    if abs(ax) >= abs(ay) and abs(ax) > 250:
+        player_x = min(4, max(0, player_x + (1 if ax > 0 else -1)))
+    elif abs(ay) > 250:
+        player_y = min(4, max(0, player_y + (1 if ay > 0 else -1)))
     if player_x == hazard_x and player_y == hazard_y:
-        music.play(music.builtin_playable_sound(SoundExpression.SAD), music.PlaybackMode.UNTIL_DONE)
+        music.play_tone(131, 150)
         basic.show_icon(IconNames.SKULL)
-        basic.pause(600)
+        basic.pause(500)
         score = 0
-        init_level()
-        return
-
-    # Check collision with Goal
-    if player_x == goal_x and player_y == goal_y:
+        new_level()
+    elif player_x == goal_x and player_y == goal_y:
         score += 1
-        music.play(music.builtin_playable_sound(SoundExpression.HAPPY), music.PlaybackMode.UNTIL_DONE)
+        music.play_tone(880, 150)
         basic.show_icon(IconNames.YES)
-        basic.pause(400)
-        init_level()
-        return
-
-    # Render Frame
+        basic.pause(500)
+        new_level()
     basic.clear_screen()
-    # Plot goal (blinking slowly)
-    led.plot_brightness(goal_x, goal_y, 100)
-    # Plot hazard (dimly lit)
-    led.plot_brightness(hazard_x, hazard_y, 40)
-    # Plot player marble (brightest)
+    if (input.running_time() // 350) % 2 == 0:
+        led.plot_brightness(goal_x, goal_y, 120)
+    led.plot_brightness(hazard_x, hazard_y, 35)
     led.plot_brightness(player_x, player_y, 255)
-    
-    basic.pause(180)  # Game frame refresh rate
-
-basic.forever(on_forever)
+    basic.pause(180)
+basic.forever(game)
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing & Gameplay
-1. Flash the game to the board. Hold the board flat horizontally in both palms.
-2. The brightest LED is your marble; the dim LED is the hazard trap; the medium LED is your goal.
-3. Gently tilt forward, back, left, and right to roll the marble.
-4. Reach the goal to trigger victory audio and increase your score.
-5. Hitting the hazard displays a skull and resets the game!
+1. Flash and test all four tilt directions. Invert the relevant axis sign if your desired controls differ.
+2. Confirm the player stays inside the 5×5 grid, the goal blinks, and collision resets the score.
+3. Reach several goals and press A to view the score. The game display may replace the score after the scroll finishes.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Multiplayer Marble Race:** Use the radio module so Player 1 and Player 2 race simultaneously on separate Micro:bits, with the first player to reach 5 points sending a game-over packet to freeze the opponent!
-2. **Countdown Timer:** Add a 15-second survival timer that decreases the remaining time per level.
+Add a countdown timer and show the score in a dedicated paused game state.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

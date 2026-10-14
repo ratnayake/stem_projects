@@ -1,138 +1,105 @@
-# Project 02: Digital Compass & Hiking Pedometer
+# Project 02: Digital Compass & Experimental Step Counter
 
-**Track:** BBC Micro:bit Interactive Computing  
-**Difficulty Level:** Beginner to Intermediate (Grades 6–9)  
-**Estimated Time:** 45 Minutes  
-**Target Group:** 1–2 Students  
+**Platform:** micro:bit V2
 
----
+**Difficulty:** Beginner/intermediate
 
-## 1. Project Overview
-The BBC Micro:bit V2 contains an integrated combined sensor IC: an accelerometer (measuring gravitational force across 3 axes) and a magnetometer (measuring magnetic field strength in microteslas). In this project, students construct a wearable outdoor adventure tool that functions simultaneously as a digital navigation compass and an automatic step-counter (pedometer).
+**Estimated session:** 60 minutes
 
-```mermaid
-flowchart TD
-    Sensor["LSM303 / FXOS8700 Sensor"] --> Accel["3-Axis Accelerometer"]
-    Sensor --> Mag["3-Axis Magnetometer"]
+**Group:** 2–3 students; shared inventory rotates between activities.
 
-    Accel --> ShakeDetect["Peak Acceleration over 1.5g - Step Event"]
-    ShakeDetect --> Counter["Increment Step Counter"]
-    Counter --> Screen["Display on Shake: Total Steps"]
+**Revised:** 14 October 2026
 
-    Mag --> CalcAngle["Calculate Heading Angle (0° to 359°)"]
-    CalcAngle --> CompareHeading{"Compass Heading"}
-    CompareHeading -->|315° - 45°| N["Display 'N' (North)"]
-    CompareHeading -->|45° - 135°| E["Display 'E' (East)"]
-    CompareHeading -->|135° - 225°| S["Display 'S' (South)"]
-    CompareHeading -->|225° - 315°| W["Display 'W' (West)"]
-```
+## What students build
 
----
+A calibrated compass shares the board with an experimental acceleration peak counter. The counter uses upper/lower thresholds and a minimum interval, and needs calibration for the chosen mounting position. It is not an exact pedometer. A selects compass, B selects live step count; A+B resets the count.
 
-## 2. Learning Objectives (STEM Concepts)
-- **Physics & Earth Science:** Earth's geomagnetic field, magnetic declination, calibration against local magnetic noise.
-- **Kinematics:** Acceleration vectors, dynamic vs. static forces, threshold-based peak detection.
-- **Mathematics:** Angular geometry, mapping 360-degree compass bearings into discrete 8-cardinal quadrant ranges.
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| BBC Micro:bit V2 Board | 1 | [Duino.lk Micro:bit V2](https://www.duino.lk/product/microbit-v2-board/) |
-| AAA Battery Holder (2x AAA 3V) | 1 | [Duino.lk Battery Holder](https://www.duino.lk/product/microbit-v2-go-microbit-bundle/) |
-| Rubber band or Velcro Strap | 1 | Club Consumables (Wearable wrist/shoe mount) |
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| micro:bit V2 | 1 |
+| micro-USB data cable | 1 |
+| 2×AAA holder and AAA cells | 1 holder + 2 cells |
+| rubber band/strap | reused craft material |
 
----
 
-## 4. Hardware Setup
-No external wiring needed! Power the Micro:bit using the portable AAA battery pack. Strap the unit securely to your wrist or ankle using a velcro strap or rubber band.
+## Complete wiring and power
 
----
+No external electronics. Mount the board firmly on the body with a secure strap. Keep it away from motor magnets and steel desks when calibrating or using the compass.
 
-## 5. Source Code (MakeCode Python)
+## Complete source code
+
+Use the **Python editor in [MakeCode for micro:bit](https://makecode.microbit.org)**, not MicroPython. Select V2 hardware when testing microphone/speaker behaviour.
 
 ```python
-# Project 02: Digital Compass & Hiking Pedometer
 steps = 0
-mode = "COMPASS"  # Modes: 'COMPASS' or 'PEDOMETER'
-
-# Calibrate the magnetic sensor on startup
+mode = 0
+armed = True
+last_step = 0
+HIGH_PEAK = 1300
+LOW_REARM = 1100
+MIN_INTERVAL = 300
 input.calibrate_compass()
-basic.show_string("READY")
-basic.clear_screen()
 
-def on_gesture_shake():
+def compass_mode():
+    global mode
+    mode = 0
+input.on_button_pressed(Button.A, compass_mode)
+
+def steps_mode():
+    global mode
+    mode = 1
+input.on_button_pressed(Button.B, steps_mode)
+
+def reset_steps():
     global steps
-    steps += 1
-    # Emit subtle click tone through speaker
-    music.play(music.tone_playable(523, music.beat(BeatFraction.SIXTEENTH)), music.PlaybackMode.IN_BACKGROUND)
-input.on_gesture(Gesture.SHAKE, on_gesture_shake)
+    steps = 0
+input.on_button_pressed(Button.AB, reset_steps)
 
-def on_button_pressed_a():
-    global mode
-    mode = "COMPASS"
-    basic.show_string("C")
-    basic.pause(300)
-input.on_button_pressed(Button.A, on_button_pressed_a)
+def sample_steps():
+    global steps, armed, last_step
+    strength = input.acceleration(Dimension.STRENGTH)
+    now = input.running_time()
+    if strength < LOW_REARM:
+        armed = True
+    if armed and strength > HIGH_PEAK and now - last_step >= MIN_INTERVAL:
+        steps += 1
+        last_step = now
+        armed = False
+    basic.pause(30)
+basic.forever(sample_steps)
 
-def on_button_pressed_b():
-    global mode
-    mode = "PEDOMETER"
-    basic.show_string("P")
-    basic.pause(300)
-input.on_button_pressed(Button.B, on_button_pressed_b)
-
-def on_logo_touched():
-    # Touch gold logo on Micro:bit V2 to view exact numerical step count
-    basic.show_number(steps)
-input.on_logo_event(TouchButtonEvent.PRESSED, on_logo_touched)
-
-def on_forever():
-    if mode == "COMPASS":
+def display_mode():
+    if mode == 0:
         heading = input.compass_heading()
-        if heading < 22.5 or heading >= 337.5:
+        if heading < 45 or heading >= 315:
             basic.show_string("N")
-        elif heading >= 22.5 and heading < 67.5:
-            basic.show_arrow(ArrowNames.NORTH_EAST)
-        elif heading >= 67.5 and heading < 112.5:
+        elif heading < 135:
             basic.show_string("E")
-        elif heading >= 112.5 and heading < 157.5:
-            basic.show_arrow(ArrowNames.SOUTH_EAST)
-        elif heading >= 157.5 and heading < 202.5:
+        elif heading < 225:
             basic.show_string("S")
-        elif heading >= 202.5 and heading < 247.5:
-            basic.show_arrow(ArrowNames.SOUTH_WEST)
-        elif heading >= 247.5 and heading < 292.5:
+        else:
             basic.show_string("W")
-        elif heading >= 292.5 and heading < 337.5:
-            basic.show_arrow(ArrowNames.NORTH_WEST)
-    elif mode == "PEDOMETER":
-        # In pedometer mode, show a pulsing walking dot
-        led.plot(2, 2)
-        basic.pause(200)
-        led.unplot(2, 2)
-        basic.pause(200)
-
-basic.forever(on_forever)
+    else:
+        basic.show_number(steps)
+    basic.pause(200)
+basic.forever(display_mode)
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing & Calibration
-1. When first powered, the Micro:bit will display **"TILT TO FILL SCREEN"**. Tilt the board in all directions like a marble maze until all 25 LEDs light up; this calibrates the compass against local magnetic fields.
-2. Press **Button A** to enter Compass mode. Rotate slowly—notice how the screen reliably tracks **N**, **E**, **S**, and **W**.
-3. Press **Button B** to switch to Pedometer mode. Take 20 normal walking paces.
-4. Tap the **golden Micro:bit logo** at the top: the board will scroll your exact step count!
+1. Fill the calibration display by tilting the board when prompted. Rotate away from magnetic objects and check the four directions.
+2. Reset with A+B, press B and manually count 20 slow steps; repeat with 20 normal and 20 fast steps. Record the counter error for each.
+3. Adjust HIGH_PEAK, LOW_REARM and MIN_INTERVAL for the mounting position. At rest the count should remain stable.
+4. Confirm sampling continues while numbers scroll. Mode changes take effect after the current display finishes.
 
----
+## Extension
 
-## 7. Troubleshooting Checklist
-- **Compass calibration loop repeats forever?** Move away from metal desks, steel beams, or power transformers that distort the magnetic field.
-- **Steps registering when standing still?** The sensitivity threshold is too low. In MakeCode, adjust the acceleration trigger to check `input.acceleration(Dimension.STRENGTH) > 1600` instead of simple shake.
+Record raw acceleration against time and develop a better step detector; measured errors should accompany any distance estimate.
 
----
+## Verification status
 
-## 8. Innovation Challenges
-1. **Calorie Burn Calculator:** Multiply steps by average stride length (0.7m) to display total distance traveled in meters and estimated energy burned in kilocalories.
-2. **True North Correction:** Add an offset variable to correct for magnetic declination in Sri Lanka (~ -2° West).
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

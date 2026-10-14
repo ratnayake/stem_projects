@@ -1,120 +1,90 @@
-# Project 07: Automatic Dusk-to-Dawn Street Lamp with Relay
+# Project 07: Automatic Dusk-to-Dawn Model Lamp
 
-**Track:** Foundational Arduino & Basic Electronics  
-**Difficulty Level:** Beginner to Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Beginner
 
-## 1. Project Overview
-Automatic street lighting saves municipal energy by powering lights only when natural daylight drops below a critical lux threshold. In this project, students use an LDR (Light Dependent Resistor) module and an Arduino Uno to detect darkness. When twilight falls, the Arduino activates an optically isolated 5V relay module with a satisfying "click", lighting up the lamp and sounding a dusk notification!
+**Estimated session:** 60 minutes
 
-```mermaid
-flowchart LR
-    Sun["Ambient Sunlight"] --> LDR["LDR Photoresistor Module"]
-    LDR --> AnalogRead["Arduino Uno Analog Read A0"]
-    AnalogRead --> Check{"Light Under 400?"}
-    
-    Check -->|Yes - Dark| RelayON["Set Pin 7 LOW: Optocoupler Trigger"]
-    RelayON --> Click["Relay Closes Circuit: Streetlight ON"]
-    Check -->|No - Bright| RelayOFF["Set Pin 7 HIGH: Streetlight OFF"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Photoelectric Effect & Semiconductors:** How cadmium sulfide (CdS) resistance changes dynamically with photon exposure.
-- **Power Electronics & Isolation:** How an optocoupler and electromagnetic relay allow a delicate 5V microcontroller to safely switch high-power circuits without electrical feedback.
-- **Hysteresis in Control Systems:** Implementing deadband thresholds in code to prevent rapid flicking at dusk.
+## What students build
 
----
+A bare LDR and 10kΩ resistor form an analog voltage divider. Dark readings are lower for the specified wiring. Hysteresis switches a low-voltage LED lamp through a relay and avoids rapid switching near dusk.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| LDR Light Sensitive Sensor Module | 1 | [Duino.lk LDR Module](https://www.duino.lk/product/photoresistor-ldr-light-sensitive-sensor-module/) |
-| 5V 1-Channel Relay Module | 1 | [Duino.lk Relay Module](https://www.duino.lk/product/relay-board-module-5v-1-channel/) |
-| 5mm Yellow LED (Simulating streetlight) | 1 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistor | 1 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| Male to Female Jumper Wires | 6 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Uno and USB data cable | 1 |
+| bare GL12528 LDR | 1 |
+| 10kΩ resistor | 1 |
+| 1kΩ resistor | 1 |
+| yellow LED | 1 |
+| 5V relay module with onboard driver | 1 |
+| breadboard and jumpers | 1 |
 
-| Module Pin | Arduino Uno Connection | Function |
-| :--- | :--- | :--- |
-| **LDR VCC** | 5V | Sensor power |
-| **LDR GND** | GND | Ground |
-| **LDR A0 (Analog Out)** | Analog Pin **A0** | Variable voltage 0–5V proportional to light |
-| **Relay VCC** | 5V | Relay coil power |
-| **Relay GND** | GND | Ground |
-| **Relay IN** | Digital Pin **7** | Active LOW relay trigger |
-| **Relay NO (Normally Open)** | To LED Anode via 220Ω | Switched load terminal |
-| **Relay COM (Common)** | 5V | Common power rail |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Power Uno via USB. Use the module's onboard driver, not a bare relay coil. This demonstration switches only the listed 5V LED; do not connect mains loads. Check the supplied relay's active-low/active-high input before attaching the LED load. An optocoupler does not automatically isolate supplies when grounds are shared.
+
+| Connection | Destination |
+| :-- | :-- |
+| LDR leg 1 | Uno 5V |
+| LDR leg 2 | A0 and one end of 10kΩ |
+| Other end of 10kΩ | GND |
+| Relay VCC/GND/IN | 5V/GND/D7 |
+| Relay COM | Uno 5V |
+| Relay NO | 1kΩ → yellow LED anode |
+| Yellow LED cathode | GND |
+| Relay NC | Unconnected |
+
+If the relay module requires a separate supply, use one listed adapter and a common ground without joining the two +5V rails; confirm the module's trigger compatibility.
+
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 07: Automatic Dusk-to-Dawn Street Lamp with Relay
- * Club: School Electronics & Innovation Club
- */
-
-const int PIN_LDR   = A0;
-const int PIN_RELAY = 7;
-
-// Threshold values with Hysteresis to prevent flickering
-const int DARK_THRESHOLD  = 400; // Turn light ON when reading drops below this
-const int LIGHT_THRESHOLD = 500; // Turn light OFF when reading rises above this
-
-bool isLampOn = false;
-
-void setup() {
-  pinMode(PIN_RELAY, OUTPUT);
-  // Most 5V relay modules are Active LOW (HIGH = OFF, LOW = ON)
-  digitalWrite(PIN_RELAY, HIGH); 
-  
-  Serial.begin(9600);
-  Serial.println("Street Lamp Automation Initialized.");
+#include <Arduino.h>
+const byte RELAY = 7;
+const bool ACTIVE_LOW = true; // Confirm on the supplied module.
+const int DARK_THRESHOLD = 350, LIGHT_THRESHOLD = 500;
+bool on = false;
+void setLamp(bool value) {
+  on = value;
+  digitalWrite(RELAY, ACTIVE_LOW ? (on ? LOW : HIGH) : (on ? HIGH : LOW));
 }
-
+void setup() {
+  digitalWrite(RELAY, ACTIVE_LOW ? HIGH : LOW); // Set OFF before enabling output.
+  pinMode(RELAY, OUTPUT); setLamp(false);
+  Serial.begin(9600);
+}
 void loop() {
-  int lightValue = analogRead(PIN_LDR);
-  Serial.print("Ambient Light Level: ");
-  Serial.println(lightValue);
-
-  if (!isLampOn && lightValue < DARK_THRESHOLD) {
-    // Night has fallen - activate relay
-    digitalWrite(PIN_RELAY, LOW); // Relay ON
-    isLampOn = true;
-    Serial.println(">>> DUSK DETECTED: Streetlight Activated!");
-  } 
-  else if (isLampOn && lightValue > LIGHT_THRESHOLD) {
-    // Dawn has broken - deactivate relay
-    digitalWrite(PIN_RELAY, HIGH); // Relay OFF
-    isLampOn = false;
-    Serial.println(">>> DAWN DETECTED: Streetlight Deactivated.");
-  }
-
-  delay(500); // Check every half-second
+  int light = analogRead(A0);
+  Serial.println(light);
+  if (!on && light < DARK_THRESHOLD) setLamp(true);
+  else if (on && light > LIGHT_THRESHOLD) setLamp(false);
+  delay(200);
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing & Calibration
-1. Upload the code and open the Arduino IDE **Serial Monitor** at 9600 baud.
-2. Note the ambient light reading under classroom lights (typically 600–850).
-3. Cup your hand over the LDR sensor to simulate nightfall: reading drops below 400.
-4. Listen for the distinct physical **"click"** of the mechanical relay contacts closing and see the yellow LED streetlight light up immediately.
+1. With the LED load disconnected, check which output level releases the relay and set ACTIVE_LOW accordingly.
+2. Print A0 in bright light and with the LDR covered; dark should read lower. Set thresholds between those readings with a useful deadband.
+3. Connect the model LED; covering the LDR should light it, uncovering should turn it off.
+4. Slowly change the light near the thresholds and confirm no relay chatter.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **PIR Security Integration:** Add an ultrasonic sensor or motion detector so the street lamp stays at 20% brightness at night, and jumps to 100% full beam only when a car or pedestrian approaches!
-2. **Solar Efficiency Logger:** Track daylight hours over an entire school day by measuring and logging timestamps to the Serial Plotter.
+Log time spent on. For LED dimming, use a suitable transistor/MOSFET circuit with PWM; a mechanical relay cannot provide brightness control.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

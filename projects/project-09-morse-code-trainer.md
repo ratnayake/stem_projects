@@ -1,165 +1,110 @@
 # Project 09: Audio-Visual Morse Code Keyer & Decoder
 
-**Track:** Foundational Arduino & Basic Electronics  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Nano or Uno
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-Invented in the 1830s by Samuel Morse, Morse code remains the cornerstone of telecommunications history. In this project, students build a telegraph station with an Arduino Nano, a tactile keying button, an LED indicator, and a piezo buzzer. As the student presses the key, the system plays audio sidetones and computes the exact duration of each press: short presses are registered as "Dots" (dits) and longer presses as "Dashes" (dahs). The Arduino decodes the sequence in real time and prints out the English alphabet letter!
+**Estimated session:** 60 minutes
 
-```mermaid
-flowchart TD
-    Key["Press Telegraph Button"] --> Measure["Measure Press Duration (ms)"]
-    Measure --> Classify{"Duration Check"}
-    Classify -->|Under 250ms| Dit["Add '.' (Dot) to Buffer"]
-    Classify -->|250ms or more| Dah["Add '-' (Dash) to Buffer"]
-    
-    Dit --> PauseWait["Wait for Inactivity Pause over 800ms"]
-    Dah --> PauseWait
-    PauseWait --> Decode["Lookup Morse Buffer in Alphabet Table"]
-    Decode --> Output["Print English Character to Serial Monitor / LCD"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Telecommunications History:** Binary encoding, variable-length codes, information theory (why frequent letters like 'E' and 'T' have short codes).
-- **String Algorithms:** Buffer accumulation, pattern matching, lookup tables (LUT).
-- **Electronics:** Passive audio generation, switch debounce handling.
+## What students build
 
----
+A debounced button keys a passive piezo and LED. Short/long presses build a bounded Morse sequence, decoded after 800ms of released silence. The trainer supports letters A–Z and a continuous SOS sequence; it is a timing exercise, not an acoustic decoder.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Nano V3.0 | 1 | [Duino.lk Nano V3.0](https://www.duino.lk/product/arduino-compatible-nano-v3-0/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| Tactile Push Button 12x12mm | 1 | [Duino.lk Push Button](https://www.duino.lk/product/tactile-push-button-switch-4pins-12x12x7-3mm/) |
-| 10kΩ Resistor (Pull-down) | 1 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| 5mm Yellow or Red LED | 1 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistor | 1 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| Piezo Electronic Buzzer | 1 | [Duino.lk Buzzer](https://www.duino.lk/product/dc-3-24v-electronic-buzzer/) |
-| Jumper Wires Male-to-Male | 8 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-male-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Nano and USB-C data cable | 1 |
+| breadboard/jumpers | 1 |
+| button | 1 |
+| red or yellow LED | 1 |
+| 1kΩ resistors | 2 |
+| passive piezo disc | 1 |
 
-| Component Pin | Arduino Nano Pin | Notes |
-| :--- | :--- | :--- |
-| **Telegraph Key (Button)** | Pin **D2** (with 10kΩ to GND) | Other button terminal connects to +5V |
-| **Indicator LED (+)** | Pin **D13** via 220Ω resistor | Visual feedback during transmission |
-| **Piezo Buzzer (+)** | Pin **D8** | Emits 750Hz telegraph audio sidetone |
-| **Ground Returns** | Breadboard GND rail | Connected to Arduino GND |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Buttons connect between their GPIO and GND and use `INPUT_PULLUP`: released is HIGH, pressed is LOW. Use opposite switched terminals, not the two legs already connected internally. No external pull-down resistor is required.
+
+Use a **passive piezo disc**, not the DC continuous alarm: GPIO → 1kΩ resistor → piezo lead; other lead → GND. The resistor limits drive current and the sound may be quiet. Solder flexible leads to the disc with adult supervision; never substitute a magnetic buzzer or speaker without a suitable driver.
+
+Button D2 to GND; LED D13 → 1kΩ → anode, cathode GND; piezo D8 → 1kΩ → disc, other lead GND.
+
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 09: Audio-Visual Morse Code Keyer & Decoder
- * Club: School Electronics & Innovation Club
- */
-
-const int PIN_KEY    = 2;
-const int PIN_BUZZER = 8;
-const int PIN_LED    = 13;
-
-const int DOT_THRESHOLD = 250;   // Less than 250ms = DOT; greater = DASH
-const int LETTER_PAUSE  = 800;   // 800ms of silence indicates letter complete
-
-unsigned long pressStartTime = 0;
-unsigned long releaseStartTime = 0;
-bool isPressed = false;
-String morseBuffer = "";
-
-// Lookup table for Morse code letters A-Z
-const char* morseTable[26] = {
-  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..",   // A-I
-  ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", // J-R
-  "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."        // S-Z
+#include <Arduino.h>
+struct Button {
+  byte pin;
+  bool raw = HIGH, stable = HIGH;
+  unsigned long changed = 0;
+  void begin(byte p) { pin = p; pinMode(pin, INPUT_PULLUP);
+    raw = stable = digitalRead(pin); changed = millis(); }
+  bool update() {
+    bool r = digitalRead(pin);
+    if (r != raw) { raw = r; changed = millis(); }
+    if (millis() - changed >= 25 && stable != raw) {
+      stable = raw; return stable == LOW;
+    }
+    return false;
+  }
+  bool down() { return stable == LOW; }
 };
-
-char decodeMorse(String code) {
-  for (int i = 0; i < 26; i++) {
-    if (code == morseTable[i]) {
-      return (char)('A' + i);
-    }
+Button key;
+const char* table[26] = {".-","-...","-.-.","-..",".","..-.","--.","....","..",
+".---","-.-",".-..","--","-.","---",".--.","--.-",".-.","...","-","..-","...-",".--","-..-","-.--","--.."};
+char sequence[10] = "";
+byte length = 0;
+bool wasDown = false, overflow = false;
+unsigned long pressAt = 0, releasedAt = 0;
+void decode() {
+  char letter = '?';
+  if (!overflow) {
+    for (byte i=0; i<26; i++) if (strcmp(sequence,table[i])==0) letter='A'+i;
+    if (strcmp(sequence,"...---...")==0) letter='!';
   }
-  if (code == "...---...") return '!'; // SOS!
-  return '?'; // Unknown code
+  Serial.print(sequence); Serial.print(" -> ");
+  if (overflow) Serial.println("Too many symbols"); else Serial.println(letter);
+  length=0; sequence[0]='\0'; overflow=false;
 }
-
 void setup() {
-  pinMode(PIN_KEY, INPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-  pinMode(PIN_LED, OUTPUT);
-
-  Serial.begin(9600);
-  Serial.println("=== MORSE CODE TELEGRAPH STATION INITIALIZED ===");
-  Serial.println("Tap button to send: Short = Dot (.), Long = Dash (-)");
+  key.begin(2); pinMode(13,OUTPUT); pinMode(8,OUTPUT); Serial.begin(9600);
+  Serial.println("Short <250ms dot; long dash; 800ms silence ends a letter.");
 }
-
 void loop() {
-  int buttonState = digitalRead(PIN_KEY);
-
-  // Key Down (Press)
-  if (buttonState == HIGH && !isPressed) {
-    isPressed = true;
-    pressStartTime = millis();
-    digitalWrite(PIN_LED, HIGH);
-    tone(PIN_BUZZER, 750); // Play telegraph tone
-  }
-  // Key Up (Release)
-  else if (buttonState == LOW && isPressed) {
-    isPressed = false;
-    unsigned long pressDuration = millis() - pressStartTime;
-    noTone(PIN_BUZZER);
-    digitalWrite(PIN_LED, LOW);
-    releaseStartTime = millis();
-
-    if (pressDuration > 40) { // Debounce threshold
-      if (pressDuration < DOT_THRESHOLD) {
-        morseBuffer += ".";
-        Serial.print(".");
-      } else {
-        morseBuffer += "-";
-        Serial.print("-");
-      }
+  key.update(); bool down=key.down(); unsigned long now=millis();
+  if (down && !wasDown) { pressAt=now; tone(8,750); digitalWrite(13,HIGH); }
+  if (!down && wasDown) {
+    noTone(8); digitalWrite(13,LOW); releasedAt=now;
+    unsigned long duration=now-pressAt;
+    if (duration>=40) {
+      if (length<9) { sequence[length++]=duration<250 ? '.' : '-'; sequence[length]='\0'; }
+      else overflow=true;
     }
   }
-
-  // Check if letter pause threshold has been exceeded while idle
-  if (!isPressed && morseBuffer.length() > 0) {
-    if (millis() - releaseStartTime > LETTER_PAUSE) {
-      char decodedLetter = decodeMorse(morseBuffer);
-      Serial.print(" -> ");
-      Serial.println(decodedLetter);
-      morseBuffer = ""; // Reset buffer for next letter
-    }
-  }
+  wasDown=down;
+  if (!down && length>0 && now-releasedAt>=800) decode();
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing & Famous Practice Words
-- Try typing **SOS** (`...` pause `---` pause `...`):
-  1. Three quick taps (`...`) -> Board prints **S**
-  2. Three long presses (`---`) -> Board prints **O**
-  3. Three quick taps (`...`) -> Board prints **S**
-- Try typing **HELLO**:
-  - `....` -> **H**
-  - `.` -> **E**
-  - `.-..` -> **L**
-  - `.-..` -> **L**
-  - `---` -> **O**
+1. Upload and open Serial Monitor at 9600. Key E (dot), T (dash), A (dot-dash) and HELLO.
+2. Send SOS as three separately paused letters, or nine continuous symbols for the special ! output.
+3. Hold the key for a dash and verify switch bounce does not split it. Send more than nine symbols without a letter pause: the buffer must report overflow safely.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Reverse Mode (Text to Morse):** Type an English word into the Arduino Serial Monitor input box and have the Arduino automatically beep out the correct Morse audio rhythm!
+Implement text-to-Morse using the same passive piezo.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

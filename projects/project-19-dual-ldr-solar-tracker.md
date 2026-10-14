@@ -1,130 +1,80 @@
-# Project 19: Dual-LDR Single-Axis Solar Tracker
+# Project 19: Dual-LDR Light-Following Tracker Model
 
-**Track:** Robotics, Renewable Energy & Mechatronics  
-**Difficulty Level:** Advanced (Grades 8–11)  
-**Estimated Time:** 75 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Nano or Uno
 
----
+**Difficulty:** Intermediate/advanced
 
-## 1. Project Overview
-Solar photovoltaic panels generate up to 30% more daily electrical energy when equipped with active tracking systems that follow the sun from dawn to dusk. In this project, students build a working sun-seeking solar tracker. Two LDR (photoresistor) sensors separated by a cardboard shadow divider compare light levels on the left and right. An Arduino Nano computes the differential error and adjusts an SG90 servo motor until both sensors receive equal illumination!
+**Estimated session:** 75–90 minutes
 
-```mermaid
-flowchart TD
-    Sun["Sun Position (Angle)"] --> Light["Light Cast Across Divider"]
-    Light --> LDR1["Left LDR (Analog A0)"]
-    Light --> LDR2["Right LDR (Analog A1)"]
-    
-    LDR1 --> Compare{"Compute Differential: Left minus Right"}
-    LDR2 --> Compare
-    
-    Compare -->|Diff over plus 40| MoveLeft["Left is Brighter: Rotate Servo Counter-Clockwise"]
-    Compare -->|Diff under minus 40| MoveRight["Right is Brighter: Rotate Servo Clockwise"]
-    Compare -->|Diff within 40| Rest["Equilibrium Achieved: Panel Facing Sun Directly"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Renewable Green Energy:** Solar irradiance, solar zenith angle, efficiency losses from cosine angular misalignment.
-- **Closed-Loop Feedback Control:** Error calculation ($\Delta E = LDR_{left} - LDR_{right}$), deadband thresholding to eliminate mechanical oscillations.
-- **Mechatronics:** Proportional rotational positioning using servo actuation.
+## What students build
 
----
+Two bare LDR dividers compare light on each side of a cardboard shadow vane. A servo moves a lightweight platform to reduce the difference. This is a light-following tracker model; no solar panel is included and no energy-generation gain is claimed.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Nano V3.0 | 1 | [Duino.lk Nano V3.0](https://www.duino.lk/product/arduino-compatible-nano-v3-0/) |
-| LDR Light Sensitive Sensor Modules | 2 | [Duino.lk LDR Modules](https://www.duino.lk/product/photoresistor-ldr-light-sensitive-sensor-module/) |
-| SG90 9g Micro Servo Motor | 1 | [Duino.lk SG90 Servo](https://www.duino.lk/product/servo-motor-sg90-9g/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| 60W Hot Melt Glue Gun & Cardboard | 1 | [Duino.lk Glue Gun](https://www.duino.lk/product/60w-glue-gun-nozzle-sd-a6/) |
-| Male to Female Jumper Wires | 8 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Nano and USB-C data cable | 1 |
+| matched bare GL12528 LDRs | 2 |
+| 10kΩ resistors | 2 |
+| SG90 and horn | 1 |
+| 5V/2A adapter and DC socket | 1 |
+| 470µF capacitor ≥10V | 1 |
+| breadboard/jumpers, vane/platform, glue gun/11mm sticks | shared |
 
-| Component Pin | Arduino Nano Pin | Notes |
-| :--- | :--- | :--- |
-| **Left LDR Module A0** | Analog Pin **A0** | Left light measurement |
-| **Right LDR Module A0** | Analog Pin **A1** | Right light measurement |
-| **SG90 Servo PWM** | Digital Pin **D9** | Servo rotation control |
-| **All Module VCCs** | 5V Rail | Regulated +5V |
-| **All Module GNDs** | GND Rail | Common ground |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Power the board through its USB socket. Power the SG90 red lead from the separate **regulated 5V/2A adapter** through its matching DC screw-terminal socket; brown goes to adapter negative. Join adapter negative to board GND. Only the servo signal connects to the listed GPIO. Do not join adapter +5V to the board's USB-derived 5V rail, micro:bit 3V, or Vin. Add a 470µF capacitor (rated at least 10V) across the servo supply near the servo, positive to +5V and negative to GND. Use short power wires and a lightweight, freely moving model. Check voltage and polarity before attaching the servo. If the board resets or the servo stalls, disconnect and correct supply/wiring/linkage before continuing.
+
+Wire each LDR divider identically: board 5V → LDR → measurement node → 10kΩ → GND. Left node goes to A0; right node goes to A1. Brighter light gives a higher reading. The servo signal goes to D9. Bare LDRs have two leads and no separate AO/DO pins. Mount them on the moving light platform with enough slack in the wires and a shadow vane between them.
+
+## Complete source code
+
+Install **Servo 1.2.2 by Arduino** from Library Manager.
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 19: Dual-LDR Single-Axis Solar Tracker
- * Club: School Electronics & Innovation Club
- */
-
+#include <Arduino.h>
 #include <Servo.h>
-
-const int PIN_LDR_LEFT  = A0;
-const int PIN_LDR_RIGHT = A1;
-const int PIN_SERVO     = 9;
-
-const int TOLERANCE = 40; // Deadband to prevent servo jitter
-int servoPosition = 90;   // Start pointing straight up at 90 degrees
-
-Servo trackerServo;
-
-void setup() {
-  trackerServo.attach(PIN_SERVO);
-  trackerServo.write(servoPosition);
-  delay(500);
-
-  Serial.begin(9600);
-  Serial.println("Solar Tracker Initialized. Searching for sun...");
-}
-
+Servo tracker;
+int angle=90;
+const int DIRECTION=1; // Change to -1 if motion increases the measured imbalance.
+const int RIGHT_OFFSET=0; // Calibrate under equal lighting.
+const int TOLERANCE=40;
+void setup() {Serial.begin(9600); tracker.attach(9); tracker.write(angle); delay(500);}
 void loop() {
-  int leftLight  = analogRead(PIN_LDR_LEFT);
-  int rightLight = analogRead(PIN_LDR_RIGHT);
-
-  int diff = leftLight - rightLight;
-
-  Serial.print("Left: "); Serial.print(leftLight);
-  Serial.print(" | Right: "); Serial.print(rightLight);
-  Serial.print(" | Diff: "); Serial.println(diff);
-
-  // If left side has significantly more light, turn left
-  if (diff > TOLERANCE) {
-    if (servoPosition > 10) {
-      servoPosition -= 2;
-      trackerServo.write(servoPosition);
-      delay(30);
-    }
+  long left=0,right=0;
+  for(byte i=0;i<4;i++) {left+=analogRead(A0); right+=analogRead(A1); delay(5);}
+  int l=left/4, r=right/4+RIGHT_OFFSET, error=l-r;
+  Serial.print(l); Serial.print(','); Serial.print(r); Serial.print(','); Serial.println(error);
+  if(l>80 || r>80) {
+    if(error>TOLERANCE) angle-=2*DIRECTION;
+    else if(error<-TOLERANCE) angle+=2*DIRECTION;
+    angle=constrain(angle,20,160); tracker.write(angle);
   }
-  // If right side has significantly more light, turn right
-  else if (diff < -TOLERANCE) {
-    if (servoPosition < 170) {
-      servoPosition += 2;
-      trackerServo.write(servoPosition);
-      delay(30);
-    }
-  }
-
-  delay(60); // Tracking speed
+  delay(80);
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Physical Construction & Testing
-1. Cut a 5cm × 5cm cardboard platform and hot-glue the two LDR modules side by side.
-2. Glue a vertical cardboard partition (the "shadow vane") exactly between the two LDRs.
-3. Glue the platform to the horn of the SG90 servo motor.
-4. Turn on a smartphone flashlight across the room: watch the tracker smoothly pivot its face to lock directly onto the beam! Move the light across the table—the tracker follows your flashlight continuously!
+1. Verify external servo power; test both divider voltages before connecting A0/A1. Cover each LDR and confirm its value falls.
+2. With equal light on both, set RIGHT_OFFSET to average(left − right) and choose a tolerance above the remaining noise.
+3. Place a light on one side. Check that servo movement reduces the error; if it grows, change DIRECTION to -1 or swap sensor sides.
+4. Move the light slowly between sides and verify tracking within 20–160°. Darkness should hold position, and hard stops must not stall the servo.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Sleep Mode at Night:** If both LDR readings drop below 100 (total darkness), have the servo automatically swing back to East (0 degrees) to await the morning dawn!
+A photovoltaic experiment requires a separately budgeted small panel and measured energy comparison against a fixed mount.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

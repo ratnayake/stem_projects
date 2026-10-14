@@ -1,163 +1,131 @@
-# Project 18: Bluetooth Smartphone Remote-Controlled Car
+# Project 18: Bluetooth Smartphone RC Car with Command Timeout
 
-**Track:** Robotics, Motors & Wireless Control  
-**Difficulty Level:** Advanced (Grades 8–11)  
-**Estimated Time:** 90 Minutes  
-**Target Group:** 2–3 Students  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Advanced
 
-## 1. Project Overview
-Upgrading an autonomous rover to a wireless, remote-controlled vehicle is a thrilling club experience. In this project, students interface an HC-06 Bluetooth module to the robot car from Project 17. By pairing an Android smartphone running a free Bluetooth Controller app, students wirelessly steer the car using touch buttons, an on-screen joystick, or phone tilt gyroscopes!
+**Estimated session:** 90–120 minutes
 
-```mermaid
-sequenceDiagram
-    actor Student as Student Android Phone
-    participant BT as HC-06 Bluetooth Module (2.4GHz SPP)
-    participant Uno as Arduino Uno (UART Serial Rx)
-    participant Driver as L298N Motor Controller
-    participant Motors as TT Geared Wheels
+**Group:** 2–3 students; shared inventory rotates between activities.
 
-    Student->>BT: Tap 'FORWARD' Button on App (Sends ASCII 'F')
-    BT->>Uno: Transmit Byte 'F' via Hardware Serial RX (Pin 0)
-    Uno->>Driver: Set IN1=HIGH, IN2=LOW, IN3=HIGH, IN4=LOW
-    Driver->>Motors: Apply +9V to Both Left & Right Wheels
-    Note over Motors: Car Drives Forward
-    Student->>BT: Tap 'STOP' Button (Sends ASCII 'S')
-    BT->>Uno: Transmit Byte 'S'
-    Uno->>Driver: Set All IN Pins LOW
-    Driver->>Motors: Cut Power (Car Brakes)
+**Revised:** 14 October 2026
+
+## What students build
+
+An Android Bluetooth Classic/SPP controller sends F/B/L/R/S characters. Valid motion commands must repeat at least every 100ms; after 400ms without a valid command the car stops. SoftwareSerial keeps HC-06 traffic off the USB upload pins. Unknown commands stop the motors; CR/LF framing is ignored.
+
+## Materials and preparation
+
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
+
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| robot kit: chassis, motors, Uno/cable, L298N, 4×AA holder | 1 |
+| HC-06 carrier module with 5V VCC regulator | 1 |
+| 1kΩ resistors | 3 |
+| AA cells | 4 |
+| 5V/2A USB power bank and USB power breakout | 1 each |
+| 100nF motor capacitors | 2 |
+| motor switch, 2A fuse/holder, power wire and signal jumpers | shared |
+| Android Bluetooth Classic/SPP phone | school-provided |
+
+
+## Complete wiring and power
+
+Use the full robot kit's L298N, motors, chassis and **4×AA holder**; verify that the delivered holder really is four-cell before purchase. Fit four matched alkaline AA cells (nominal 6V) for motor power. The L298N loses voltage, so this is a modest-speed model; the available torque must be tested. Do not replace the pack with a PP3 9V battery, connect motors to GPIO, or use the breadboard regulator for motor power.
+
+**Remove ENA and ENB jumpers** before wiring PWM, and **remove the separate 5V-EN/regulator-enable jumper** to disable the module's onboard regulator. Supply its labelled 5V logic terminal from the external regulated 5V source. On modules with different routing, confirm the board diagram before connecting power. Never join its regulator output to another 5V source.
+
+| L298N/module terminal | Connection |
+| :-- | :-- |
+| Motor supply, often labelled +12V/Vs | Four-AA positive through switch and inline 2A fuse |
+| GND | Four-AA negative, external 5V negative and board GND |
+| Logic +5V | External regulated 5V; 5V-EN jumper removed |
+| ENA / ENB | Board D5 / D6; both enable jumpers removed |
+| IN1 / IN2 / IN3 / IN4 | D7 / D8 / D9 / D10 |
+| OUT1 / OUT2 | Left motor |
+| OUT3 / OUT4 | Right motor |
+| 100nF ceramic capacitors | One across each motor's terminals |
+
+Use insulated stranded power wire (about 22AWG), screw terminals and secure strain relief for motor current, not thin jumper leads or breadboard rails. The fuse protects wiring against a short; it does not make stalled motors safe. Verify motors are rated 3–6V, driver flyback diodes are fitted, and the motor case/driver does not overheat. If the four-AA/L298N combination cannot start reliably under the intended load, stop and use a separately quoted lower-loss driver rather than raising voltage blindly. The revised budget includes initial cells and spares, not recurring annual replacements.
+
+Use the listed enclosed **USB power bank with two fixed-5V outputs and at least 2A total continuous rating**. One output powers the Uno through its USB socket/cable; the second powers L298N logic through the USB-A 5V/GND screw-terminal cable. Verify the bank stays on at idle. Do not use a USB-PD higher-voltage trigger, connect the four-AA pack to Uno Vin, or join the peripheral 5V terminal to the Uno 5V pin. Join all grounds. For bench testing, use computer USB for Uno and the separate 5V/2A adapter/DC socket for driver logic; never attach both peripheral sources at once.
+
+For this build the peripheral 5V supplies L298N logic only; detach the sonar and servo from project 17. An HC-06 **carrier** with onboard VCC regulator may use board 5V; a bare 3.3V module needs a different regulated supply and is not the specified purchase.
+
+| HC-06 connection | Destination |
+| :-- | :-- |
+| VCC / GND | Uno 5V / common GND |
+| TXD | Uno D2 (SoftwareSerial RX) |
+| RXD | Divider node N below |
+
+```
+Uno D3 (TX) -- 1kΩ -- N -- 1kΩ -- 1kΩ -- GND
+                       |
+                    HC-06 RXD
 ```
 
----
+N receives about 3.33V from a 5V TX signal. The two lower 1kΩ resistors are in series (2kΩ total). Uno D0/D1 stay unconnected to HC-06, avoiding upload contention. Do not connect Uno TX directly to HC-06 RXD.
 
-## 2. Learning Objectives (STEM Concepts)
-- **Wireless Telemetry:** The Bluetooth Serial Port Profile (SPP), baud rate synchronization (9600 bps), packet stream parsing.
-- **UART Serial Communication:** Asynchronous serial framing, Start/Stop bits, logic level voltage considerations (5V vs 3.3V).
-- **Mobile-Embedded Interfacing:** Designing custom human-machine interfaces (HMI) on smartphones.
+## Complete source code
 
----
-
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Duino Smart Robot Car Chassis Kit | 1 | [Duino.lk Robot Kit](https://www.duino.lk/product/duino-obstacle-avoidance-smart-robot-car-kit/) |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| L298N Dual H-Bridge Motor Driver Module | 1 | [Duino.lk L298N](https://www.duino.lk/product/l298n-dual-h-bridge-dc-stepper-motor-driver/) |
-| HC-06 Bluetooth Transceiver Module | 1 | [Duino.lk HC-06](https://www.duino.lk/product/hc-06-bluetooth-rf-transceiver-module-slave/) |
-| 1kΩ & 2kΩ Resistors (for 3.3V RX Voltage Divider) | 2 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| 9V Battery Snap Connector | 1 | [Duino.lk 9V Snap](https://www.duino.lk/product/9v-battery-snap-on-connector-clip/) |
-| Male to Female Jumper Wires | 6 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
-
----
-
-## 4. Hardware Wiring Table
-
-> [!IMPORTANT]
-> Temporarily disconnect the **RX** wire from the Arduino while uploading code, because Arduino's USB programmer shares the hardware Serial RX pin (Pin 0)! Reconnect after flashing.
-
-| HC-06 Module Pin | Arduino Uno Pin | Purpose |
-| :--- | :--- | :--- |
-| **VCC** | 5V | Bluetooth module power |
-| **GND** | GND | Common ground |
-| **TXD** | Pin **D0 (RX)** | Transmits received Bluetooth bytes into Arduino |
-| **RXD** | Pin **D1 (TX)** via voltage divider | Receives data from Arduino (3.3V logic) |
-
----
-
-## 5. Arduino C++ Source Code
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 18: Bluetooth Smartphone Remote-Controlled Car
- * Club: School Electronics & Innovation Club
- */
-
-const int ENA = 5;
-const int ENB = 6;
-const int IN1 = 7;
-const int IN2 = 8;
-const int IN3 = 9;
-const int IN4 = 10;
-
-int currentSpeed = 200; // Default speed (0-255)
-
-void setup() {
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-
-  // Initialize hardware serial for HC-06 Bluetooth
-  Serial.begin(9600);
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+const byte ENA=5, ENB=6, IN1=7, IN2=8, IN3=9, IN4=10;
+void motor(int left, int right) {
+  // Disable bridges before changing direction.
+  analogWrite(ENA,0); analogWrite(ENB,0);
+  digitalWrite(IN1,left>0); digitalWrite(IN2,left<0);
+  digitalWrite(IN3,right>0); digitalWrite(IN4,right<0);
+  analogWrite(ENA,constrain(abs(left),0,255));
+  analogWrite(ENB,constrain(abs(right),0,255));
 }
-
+void stopCar() { motor(0,0); } // Enable LOW: coast; this is not active braking.
+void beginMotors() {
+  for(byte p=5;p<=10;p++) { digitalWrite(p,LOW); pinMode(p,OUTPUT); }
+  stopCar();
+}
+SoftwareSerial bluetooth(2,3); // Board RX, TX
+unsigned long lastCommand=0;
+bool moving=false;
+const int SPEED=140;
+void setup() {
+  beginMotors(); bluetooth.begin(9600); Serial.begin(9600);
+  Serial.println("Repeat F/B/L/R/S every <=100ms. Timeout 400ms.");
+}
 void loop() {
-  if (Serial.available() > 0) {
-    char cmd = Serial.read();
-
-    switch (cmd) {
-      case 'F': // Move Forward
-        analogWrite(ENA, currentSpeed);
-        analogWrite(ENB, currentSpeed);
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, LOW);
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4, LOW);
-        break;
-
-      case 'B': // Move Backwards
-        analogWrite(ENA, currentSpeed);
-        analogWrite(ENB, currentSpeed);
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
-        break;
-
-      case 'L': // Turn Left
-        analogWrite(ENA, currentSpeed);
-        analogWrite(ENB, currentSpeed);
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4, LOW);
-        break;
-
-      case 'R': // Turn Right
-        analogWrite(ENA, currentSpeed);
-        analogWrite(ENB, currentSpeed);
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, LOW);
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
-        break;
-
-      case 'S': // Stop
-      default:
-        analogWrite(ENA, 0);
-        analogWrite(ENB, 0);
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, LOW);
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, LOW);
-        break;
+  while(bluetooth.available()) {
+    char c=bluetooth.read();
+    if(c=='\r' || c=='\n') continue;
+    bool valid=true;
+    switch(c) {
+      case 'F': motor(SPEED,SPEED); moving=true; break;
+      case 'B': motor(-SPEED,-SPEED); moving=true; break;
+      case 'L': motor(-SPEED,SPEED); moving=true; break;
+      case 'R': motor(SPEED,-SPEED); moving=true; break;
+      case 'S': stopCar(); moving=false; break;
+      default: stopCar(); moving=false; valid=false; break;
     }
+    if(valid) lastCommand=millis();
   }
+  if(moving && millis()-lastCommand>=400) {stopCar(); moving=false;}
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Smartphone Setup & Pairing
-1. On your Android phone, go to **Settings > Bluetooth** and search for new devices.
-2. Select **HC-06** and enter the default pairing PIN code: **`1234`** (or `0000`).
-3. Download any standard free app such as *"Arduino Bluetooth Controller"* or *"Bluetooth RC Controller"* from Google Play.
-4. Connect to HC-06 in the app, and drive your robot across the club floor!
+1. Complete project 16 first. Verify the divider and VCC regulator, upload with wheels raised and pair the phone to HC-06 (the supplied firmware may use PIN 1234 or 0000).
+2. Use an Android app supporting **Bluetooth Classic SPP** and custom single-character button messages. Configure repeated commands ≤100ms and S on release; not every RC app uses this protocol. A generic serial terminal can send a command for a short test pulse.
+3. Check F/B/L/R/S and an unknown character. Without repetition, one motion command must stop after about 400ms.
+4. Disconnect Bluetooth while sending forward repeatedly; confirm automatic stop. Test power-bank idle and motor voltage before slow supervised floor use.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Horn Button:** Program character `'V'` to sound the piezo buzzer like an automobile horn!
+Add a speed command only after defining and testing its protocol and preserving the timeout.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

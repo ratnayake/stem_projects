@@ -1,152 +1,85 @@
 # Project 01: Two-Way Pocket Radio Messenger
 
-**Track:** BBC Micro:bit Interactive Computing  
-**Difficulty Level:** Beginner (Grades 6–9)  
-**Estimated Time:** 45–60 Minutes  
-**Target Group:** 2–4 Students (Working in pairs)  
+**Platform:** micro:bit V2
 
----
+**Difficulty:** Beginner
 
-## 1. Project Overview
-In this project, students use two BBC Micro:bit V2 boards to build a bidirectional wireless text and emoji messenger. Using the Micro:bit's built-in 2.4 GHz radio transceiver, each device acts as both a transmitter and a receiver. Students can select pre-programmed messages or emojis using physical buttons and transmit them wirelessly through the air across classroom distances (up to 20–30 meters indoors).
+**Estimated session:** 45–60 minutes
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Alice as Student A (Station 1)
-    participant M1 as Micro:bit A
-    participant Air as 2.4 GHz RF Channel
-    participant M2 as Micro:bit B
-    actor Bob as Student B (Station 2)
+**Group:** 2–3 students; shared inventory rotates between activities.
 
-    Alice->>M1: Press Button A (Select Emoji)
-    Alice->>M1: Press Button A+B (Send)
-    M1->>Air: Broadcast Packet [Group 7, "SMILE"]
-    Air->>M2: Receive Packet [Group 7]
-    M2->>M2: Play Alert Chime on Speaker
-    M2->>Bob: Display Smiling Face on 5x5 LED Matrix
-    Bob->>M2: Press Button B (Send "OK" Reply)
-    M2->>Air: Broadcast Packet [Group 7, "OK"]
-    Air->>M1: Receive Packet [Group 7]
-    M1->>Alice: Display "OK" on LED Matrix
-```
+**Revised:** 14 October 2026
 
----
+## What students build
 
-## 2. Learning Objectives (STEM Concepts)
-- **Computer Science:** Radio networking concepts (channels, packets, broadcasting vs. addressing, packet sniffing).
-- **Physics:** High-frequency electromagnetic waves (2.4 GHz ISM band), antenna propagation, signal attenuation.
-- **Electronics:** On-board SoC (Nordic nRF52833) wireless transceiver architecture, battery management.
+Two V2 boards exchange short preset text messages and a happy-face emoji using the built-in radio. Button A selects text, B sends an emoji, and A+B sends the selected text. Radio groups separate classroom activities but provide no confidentiality; range depends on the room.
 
----
+## Materials and preparation
 
-## 3. Bill of Materials (From Club Inventory)
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| BBC Micro:bit V2 Board | 2 | [Duino.lk Micro:bit V2](https://www.duino.lk/product/microbit-v2-board/) |
-| AAA Battery Holder (2x AAA 3V) | 2 | [Duino.lk Battery Holder](https://www.duino.lk/product/microbit-v2-go-microbit-bundle/) |
-| AAA Alkaline Batteries (1.5V) | 4 | Club Consumables |
-| Micro-USB Programming Cable | 1 | Supplied with starter kit |
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
----
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| micro:bit V2 | 2 |
+| micro-USB data cables | 2 |
+| 2×AAA micro:bit battery holders | 2 |
+| AAA alkaline cells | 4 |
 
-## 4. Hardware Setup
-No external wiring or breadboard is required for this foundational project! Both Micro:bits use their built-in components:
-- **Button A:** Cycles through message selections.
-- **Button B:** Cycles backwards.
-- **Button A + B:** Transmits the active selection.
-- **Built-in Speaker:** Sounds an alert tone upon packet arrival.
-- **5x5 LED Matrix:** Visualizes incoming texts and icons.
 
-Plug the 2x AAA battery pack into the white JST battery socket on the back of each Micro:bit to make them fully portable.
+## Complete wiring and power
 
----
+No external circuit. Flash both boards over USB, then use their two-AAA holders for portable operation. Check holder connector polarity; never use a 9V battery. USB power is also suitable.
 
-## 5. Source Code
+## Complete source code
 
-### MakeCode Python (or upload via MakeCode Block Editor at makecode.microbit.org)
+Use the **Python editor in [MakeCode for micro:bit](https://makecode.microbit.org)**, not MicroPython. Select V2 hardware when testing microphone/speaker behaviour.
 
 ```python
-# Project 01: Micro:bit Two-Way Radio Messenger
-# Upload this identical script to both Micro:bit A and Micro:bit B
+radio.set_group(7)
+radio.set_transmit_power(7)
+messages = ["HELLO", "YES", "NO", "HELP", "GAME ON"]
+selected = 0
 
-radio.set_group(7)           # Use a unique group number (1-255) for your club pair
-radio.set_transmit_power(7)  # Maximum transmission range (0 to 7)
+def receive_text(message):
+    basic.show_string(message)
+radio.on_received_string(receive_text)
 
-messages = ["HELLO!", "YES", "NO", "HELP", "MEET ME", "GAME ON"]
-selected_index = 0
+def receive_value(name, value):
+    if name == "EMOJI" and value == 1:
+        basic.show_icon(IconNames.HAPPY)
+        basic.pause(800)
+radio.on_received_value(receive_value)
 
-def on_received_string(receivedString):
-    # Play chime alert through the built-in speaker
-    music.play(music.builtin_playable_sound(SoundExpression.HAPPY), music.PlaybackMode.IN_BACKGROUND)
-    # Scroll the incoming message on the 5x5 LED matrix
-    basic.show_string(receivedString)
-    basic.pause(500)
-    basic.clear_screen()
-radio.on_received_string(on_received_string)
+def select_text():
+    global selected
+    selected = (selected + 1) % len(messages)
+    basic.show_string(messages[selected])
+input.on_button_pressed(Button.A, select_text)
 
-def on_received_value(name, value):
-    # Handle incoming emoji codes
-    music.play(music.tone_playable(880, music.beat(BeatFraction.EIGHTH)), music.PlaybackMode.UNTIL_DONE)
-    if name == "EMOJI":
-        if value == 1:
-            basic.show_icon(IconNames.HAPPY)
-        elif value == 2:
-            basic.show_icon(IconNames.HEART)
-        elif value == 3:
-            basic.show_icon(IconNames.SURPRISED)
-        basic.pause(1000)
-        basic.clear_screen()
-radio.on_received_value(on_received_value)
-
-def on_button_pressed_a():
-    global selected_index
-    selected_index = (selected_index + 1) % len(messages)
-    basic.show_string(messages[selected_index])
-input.on_button_pressed(Button.A, on_button_pressed_a)
-
-def on_button_pressed_b():
-    # Send quick happy emoji icon
+def send_emoji():
     radio.send_value("EMOJI", 1)
     basic.show_icon(IconNames.HAPPY)
-    basic.pause(400)
-    basic.clear_screen()
-input.on_button_pressed(Button.B, on_button_pressed_b)
+input.on_button_pressed(Button.B, send_emoji)
 
-def on_button_pressed_ab():
-    # Transmit the selected text message
-    radio.send_string(messages[selected_index])
+def send_text():
+    radio.send_string(messages[selected])
     basic.show_icon(IconNames.YES)
-    basic.pause(400)
-    basic.clear_screen()
-input.on_button_pressed(Button.AB, on_button_pressed_ab)
+input.on_button_pressed(Button.AB, send_text)
 
-# On Start indicator
 basic.show_icon(IconNames.HEART)
-basic.pause(400)
-basic.clear_screen()
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Step-by-Step Testing & Operation
-1. Plug Micro:bit A into the computer via USB and go to [makecode.microbit.org](https://makecode.microbit.org).
-2. Paste the code, flash it to Micro:bit A, then plug in Micro:bit B and flash the identical code.
-3. Disconnect both from USB and plug in their AAA battery packs.
-4. Give Micro:bit A to Student A and Micro:bit B to Student B across the room.
-5. Press **Button A** on Unit A to cycle messages (`HELLO`, `YES`, `NO`).
-6. Press **Button A+B** together to transmit. Unit B will chime and scroll the message!
-7. Press **Button B** on either unit to instantly send a smiling face emoji.
+1. Open MakeCode for micro:bit, choose Python, paste this code and download it to both V2 boards. This is MakeCode Python, not MicroPython.
+2. Send text and emoji in both directions. Check A/B/A+B agree with the controls above.
+3. Change one radio group: it should stop receiving the other group. Restore group 7.
+4. Measure the achievable classroom range and record missed messages; do not claim guaranteed range.
 
----
+## Extension
 
-## 7. Troubleshooting Checklist
-- **No response on receiving unit?** Check that both devices are set to the exact same `radio.set_group()` number. If another club team is in the room, assign each pair their own group number (e.g., Team 1 uses group 7, Team 2 uses group 12).
-- **Faint LED display?** The AAA batteries are low. Measure voltage using the club's [Digital Multimeter DT-830D](https://www.duino.lk/product/digital-multimeter-dt-830d/). Each cell should read > 1.3V (2.6V total).
+Add a received-message acknowledgement and retry timeout; radio groups are not encryption.
 
----
+## Verification status
 
-## 8. Innovation & Extension Challenges
-1. **Morse Code Messenger:** Modify the code so pressing Button A sends a short "dit" tone and Button B sends a long "dah" tone.
-2. **Encrypted Channel:** Add a simple Caesar cipher algorithm that shifts characters by +3 before sending, and decodes them on the receiver.
-3. **RSSI Signal Radar:** Read `radio.received_packet(RadioPacketProperty.SIGNAL_STRENGTH)` to create a "hot or cold" beacon tracker for a classroom treasure hunt game!
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

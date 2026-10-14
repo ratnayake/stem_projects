@@ -1,145 +1,81 @@
-# Project 11: Indoor Weather Station with 16x2 I2C LCD
+# Project 11: Indoor Weather Station with I2C LCD
 
-**Track:** Sensor Measurement & Display Systems  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-In this project, students build an automated climate station for the classroom or school science lab. Using the DHT11 digital capacitive humidity and thermistor sensor, an Arduino Uno polls environmental conditions every 2 seconds. The telemetry data (temperature in °C and relative humidity in %) is formatted and displayed on a crystal-clear 16x2 character LCD via the I2C serial communications bus.
+**Estimated session:** 60–75 minutes
 
-```mermaid
-flowchart LR
-    Air["Classroom Atmosphere"] --> DHT["DHT11 Sensor (Single-Wire Bus)"]
-    DHT --> Uno["Arduino Uno (Processing)"]
-    Uno --> I2C["I2C Serial Bus (SDA / SCL)"]
-    I2C --> Backpack["PCF8574 I2C Backpack Adapter"]
-    Backpack --> LCD["16x2 Liquid Crystal Display"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Meteorology & Thermodynamics:** Temperature gradients, relative humidity (percentage of water vapor saturation in air), dew point calculations.
-- **Serial Bus Protocols:** The Inter-Integrated Circuit ($I^2C$) protocol, two-wire communication (SDA and SCL), hex addressing (`0x27` or `0x3F`).
-- **Liquid Crystal Technology:** 5x8 dot matrix character fonts, contrast potentiometer adjustment, screen refresh caching.
+## What students build
 
----
+A DHT11 reports classroom temperature and humidity every two seconds. The 16×2 LCD displays the values or a sensor error. DHT11 is suitable for trends; displaying decimal places would not improve its accuracy.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| DHT11 Temperature & Humidity Sensor | 1 | [Duino.lk DHT11](https://www.duino.lk/product/dht11-temperature-and-humidity-sensor-module/) |
-| LCD 16x2 Character Display (Blue) | 1 | [Duino.lk LCD 16x2](https://www.duino.lk/product/lcd-16x02-display-blue/) |
-| I2C Serial Interface Adapter for 1602 LCD | 1 | [Duino.lk I2C Adapter](https://www.duino.lk/product/iici2c-twi-spi-serial-interface-module-for-1602-1604-2004lcd/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| Male to Female Jumper Wires | 8 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Uno and USB data cable | 1 |
+| DHT11 module | 1 |
+| 16×2 LCD and I2C backpack | 1 each |
+| breadboard/jumpers | 1 |
+| 10kΩ data pull-up | 1 if absent from module |
+| soldering tools | shared assembly |
 
-### I2C LCD Adapter Connections
-| I2C Adapter Pin | Arduino Uno Pin | Function |
-| :--- | :--- | :--- |
-| **GND** | GND | Ground |
-| **VCC** | 5V | Power |
-| **SDA** | **A4** (or dedicated SDA header) | Serial Data Line |
-| **SCL** | **A5** (or dedicated SCL header) | Serial Clock Line |
 
-### DHT11 Sensor Connections
-| DHT11 Sensor Pin | Arduino Uno Pin | Function |
-| :--- | :--- | :--- |
-| **+ (VCC)** | 5V | Power |
-| **- (GND)** | GND | Ground |
-| **OUT / S (Signal)** | Pin **D2** | Bi-directional Single-Wire Data |
+## Complete wiring and power
 
----
+Solder the backpack's 16-pin header to the LCD if supplied separately. Use **hd44780 1.3.2 by Bill Perry**, class `hd44780_I2Cexp`, from Arduino Library Manager; it detects supported backpack pin mappings and addresses. Run its `I2CexpDiag` example first. LCD VCC → 5V, GND → GND, SDA → A4, SCL → A5 on Uno/classic Nano. Adjust the backpack contrast trimmer. A failed `lcd.begin(16, 2)` halts the sketch; check wiring and diagnosis before retrying.
 
-## 5. Arduino C++ Source Code
+DHT11 VCC → 5V, GND → GND, DATA → D2. Verify pin labels, not just wire colour. If the module has no data pull-up, add 10kΩ between DATA and 5V. Power Uno through USB.
 
-> [!NOTE]
-> Install the **LiquidCrystal_I2C** and **DHT sensor library** via the Arduino IDE Library Manager before uploading.
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 11: Indoor Weather Station with 16x2 I2C LCD
- * Club: School Electronics & Innovation Club
- */
-
+#include <Arduino.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include <hd44780.h>
+#include <hd44780ioClass/hd44780_I2Cexp.h>
+hd44780_I2Cexp lcd;
 #include <DHT.h>
-
-#define DHTPIN 2
-#define DHTTYPE DHT11
-
-DHT dht(DHTPIN, DHTTYPE);
-// Standard I2C address is usually 0x27 (or 0x3F) for 16x2 displays
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
+DHT dht(2,DHT11);
 void setup() {
-  Serial.begin(9600);
-  dht.begin();
-  
-  lcd.init();
-  lcd.backlight();
-  
-  // Startup Welcome Screen
-  lcd.setCursor(0, 0);
-  lcd.print("INNOVATION CLUB");
-  lcd.setCursor(0, 1);
-  lcd.print("WEATHER STATION");
-  delay(2000);
-  lcd.clear();
+  Serial.begin(9600); dht.begin();
+  int status=lcd.begin(16,2);
+  if (status) { Serial.println("LCD init failed; run I2CexpDiag."); while(true) delay(1000); }
+  lcd.backlight(); lcd.print("WEATHER STATION"); delay(2000);
 }
-
 void loop() {
-  // Read humidity and temperature (takes ~250 milliseconds)
-  float humidity = dht.readHumidity();
-  float temperature = dht.readTemperature();
-
-  // Check if read failed
-  if (isnan(humidity) || isnan(temperature)) {
-    Serial.println("Failed to read from DHT sensor!");
-    lcd.setCursor(0, 0);
-    lcd.print("Sensor Error!   ");
-    delay(2000);
-    return;
+  float h=dht.readHumidity(), t=dht.readTemperature();
+  lcd.clear();
+  if (isnan(h) || isnan(t)) { lcd.print("Sensor error"); Serial.println("DHT read failed"); }
+  else {
+    lcd.print("Temp: "); lcd.print(t,0); lcd.write((byte)223); lcd.print("C");
+    lcd.setCursor(0,1); lcd.print("Humidity: "); lcd.print(h,0); lcd.print("%");
+    Serial.print(t); Serial.print(" C, "); Serial.print(h); Serial.println(" %RH");
   }
-
-  // Format and print to Serial Monitor
-  Serial.print("Temp: "); Serial.print(temperature); Serial.print(" *C  | ");
-  Serial.print("Humidity: "); Serial.print(humidity); Serial.println(" %");
-
-  // Format Line 1 on LCD
-  lcd.setCursor(0, 0);
-  lcd.print("Temp: ");
-  lcd.print(temperature, 1); // 1 decimal place
-  lcd.print((char)223);      // Degree symbol
-  lcd.print("C   ");
-
-  // Format Line 2 on LCD
-  lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
-  lcd.print((int)humidity);
-  lcd.print("%   ");
-
-  delay(2000); // Wait 2 seconds between measurements
+  delay(2000);
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing & Calibration Tips
-- **LCD screen is blue but showing only black rectangles?** Turn the small blue trimmer potentiometer on the back of the I2C backpack with a small screwdriver until the white letters appear crisp and high-contrast!
-- **Display says "Sensor Error!"?** Verify DHT11 signal pin is firmly seated in Pin D2.
+1. Solder and inspect the backpack, run I2CexpDiag and adjust contrast. Install hd44780, **DHT sensor library 1.4.6 by Adafruit**, and **Adafruit Unified Sensor 1.1.15** in Library Manager.
+2. Upload the complete sketch and check readings against a reference thermometer/hygrometer if available.
+3. Disconnect DHT DATA with power off and restart; the LCD must show Sensor error.
+4. Restore wiring and check readings recover; do not use this prototype for health or heat-safety decisions.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Heat Index Comfort Meter:** Compute the OSHA Heat Index formula and display a warning tag (`"COMFORT: OK"` vs `"HEAT ALERT: HIGH"`).
-2. **Relay Fan Automation:** Connect the [5V Relay Module](https://www.duino.lk/product/relay-board-module-5v-1-channel/) so an electric cooling fan kicks on automatically when room temperature exceeds 31°C!
+Log trends to Serial Plotter; any fan extension requires a separately budgeted low-voltage fan and supply.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

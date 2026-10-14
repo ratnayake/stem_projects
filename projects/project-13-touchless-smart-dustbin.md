@@ -1,141 +1,98 @@
-# Project 13: Touchless Smart Dustbin with Servo Lid
+# Project 13: Touchless Cardboard Dustbin Model
 
-**Track:** Sensor Measurement & Physical Mechatronics  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 75 Minutes  
-**Target Group:** 2–3 Students  
+**Platform:** Arduino Nano or Uno
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-Hygiene in school laboratories and medical facilities requires minimizing physical contact with waste bins. In this popular innovation project, students build an automatic, touchless smart trash can. An ultrasonic sensor detects an approaching hand within 20cm, commanding an SG90 micro-servo motor to smoothly pivot the lid open to 90 degrees, hold it open for 4 seconds, and gently close it automatically!
+**Estimated session:** 75–90 minutes
 
-```mermaid
-stateDiagram-v2
-    [*] --> IdleClosed : Lid at 0° (Closed)
-    IdleClosed --> HandApproaching : Distance < 20cm
-    HandApproaching --> LidOpening : Servo sweeps from 0° to 90°
-    LidOpening --> WaitingForTrash : Hold open for 4000ms
-    WaitingForTrash --> LidClosing : Servo sweeps back from 90° to 0°
-    LidClosing --> IdleClosed : Ready for next user
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Public Health Tech:** Automated sanitary containment, preventing viral cross-contamination.
-- **Mechanical Leverage:** Fulcrum and torque calculations, linkage geometry for hinged lids.
-- **Embedded State Transitions:** State machines, timed transitions, preventing servo motor jitter.
+## What students build
 
----
+A lightweight cardboard lid opens for a hand closer than 20cm. It closes gradually only after four seconds of valid clear readings. A nearby hand or invalid echo during closure reopens it. This is a supervised model, not a hygienic or certified anti-pinch product.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Nano V3.0 | 1 | [Duino.lk Nano V3.0](https://www.duino.lk/product/arduino-compatible-nano-v3-0/) |
-| HC-SR04 Ultrasonic Distance Sensor | 1 | [Duino.lk HC-SR04](https://www.duino.lk/product/ultrasonic-distance-measuring-transducer/) |
-| SG90 9g Micro Servo Motor | 1 | [Duino.lk SG90 Servo](https://www.duino.lk/product/servo-motor-sg90-9g/) |
-| 60W Hot Melt Glue Gun + Glue Sticks | 1 | [Duino.lk Glue Gun](https://www.duino.lk/product/60w-glue-gun-nozzle-sd-a6/) |
-| Breadboard Mini 170 Tie-points | 1 | [Duino.lk Mini Breadboard](https://www.duino.lk/product/breadboard-mini-170-tie-points/) |
-| Cardboard Box with hinged lid | 1 | Recycled Club Materials |
-| 9V Battery Snap Connector | 1 | [Duino.lk 9V Snap](https://www.duino.lk/product/9v-battery-snap-on-connector-clip/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Nano and USB-C data cable | 1 |
+| HC-SR04 | 1 |
+| SG90 with horn | 1 |
+| 5V/2A adapter and DC socket | 1 |
+| 470µF capacitor ≥10V | 1 |
+| full breadboard/jumpers | 1 |
+| glue gun, matching 11mm glue sticks, cardboard hinge/link | shared |
 
-| Component Pin | Arduino Nano Pin | Notes |
-| :--- | :--- | :--- |
-| **HC-SR04 TRIG** | Pin **D9** | Trigger pulse output |
-| **HC-SR04 ECHO** | Pin **D10** | Echo return pulse input |
-| **Servo Orange (PWM)** | Pin **D5** | 50Hz Servo control signal |
-| **Servo Red (VCC)** | 5V | Power |
-| **Servo Brown (GND)** | GND | Ground |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Power the board through its USB socket. Power the SG90 red lead from the separate **regulated 5V/2A adapter** through its matching DC screw-terminal socket; brown goes to adapter negative. Join adapter negative to board GND. Only the servo signal connects to the listed GPIO. Do not join adapter +5V to the board's USB-derived 5V rail, micro:bit 3V, or Vin. Add a 470µF capacitor (rated at least 10V) across the servo supply near the servo, positive to +5V and negative to GND. Use short power wires and a lightweight, freely moving model. Check voltage and polarity before attaching the servo. If the board resets or the servo stalls, disconnect and correct supply/wiring/linkage before continuing.
+
+HC-SR04 VCC → board 5V; GND → board GND. These guides use 5V Uno/Nano boards. Never carry the 5V ECHO signal directly into a micro:bit. Each measurement has a timeout and readings outside 2–400cm are invalid; invalid does not mean “clear.” Wait at least 60ms between triggers on the same module; two-module builds alternate triggers at least 60ms apart to reduce crosstalk. Test your actual module against a flat target.
+
+TRIG D9; ECHO D10; servo signal D5. Mount the sonar on the **stationary front wall**, aimed at the approach area. Keep the lid light and linkage loose; confirm its path is clear. The sonar does not cover every possible pinch point.
+
+## Complete source code
+
+Install **Servo 1.2.2 by Arduino** from Library Manager.
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 13: Touchless Smart Dustbin with Servo Lid
- * Club: School Electronics & Innovation Club
- */
-
+#include <Arduino.h>
 #include <Servo.h>
-
-const int PIN_TRIG  = 9;
-const int PIN_ECHO  = 10;
-const int PIN_SERVO = 5;
-
-const int TRIGGER_DISTANCE = 20; // Open lid when hand is closer than 20cm
-const int OPEN_ANGLE  = 95;      // Lid fully open position
-const int CLOSED_ANGLE = 5;      // Lid fully closed position
-
-Servo lidServo;
-
-float readDistance() {
-  digitalWrite(PIN_TRIG, LOW);
-  delayMicroseconds(2);
-  digitalWrite(PIN_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PIN_TRIG, LOW);
-
-  long duration = pulseIn(PIN_ECHO, HIGH, 25000);
-  if (duration == 0) return 999.0;
-  return (duration * 0.0343) / 2.0;
+float distanceCM(byte trig, byte echo) {
+  digitalWrite(trig, LOW); delayMicroseconds(2);
+  digitalWrite(trig, HIGH); delayMicroseconds(10); digitalWrite(trig, LOW);
+  unsigned long us = pulseIn(echo, HIGH, 25000UL);
+  float cm = us * 0.0343f / 2.0f;
+  return (us == 0 || cm < 2 || cm > 400) ? -1.0f : cm;
 }
-
+Servo lid;
+const int CLOSED=10, OPEN=90;
+int angle=CLOSED;
+byte state=0; // 0 closed, 1 opening, 2 open, 3 closing
+bool clear=false;
+unsigned long lastPing=0, lastMove=0, clearSince=0;
 void setup() {
-  pinMode(PIN_TRIG, OUTPUT);
-  pinMode(PIN_ECHO, INPUT);
-
-  lidServo.attach(PIN_SERVO);
-  lidServo.write(CLOSED_ANGLE); // Start in closed position
-  delay(500);
-
-  Serial.begin(9600);
-  Serial.println("Smart Dustbin Initialized.");
+  Serial.begin(9600); pinMode(9,OUTPUT); pinMode(10,INPUT);
+  lid.attach(5); lid.write(CLOSED);
 }
-
 void loop() {
-  float distance = readDistance();
-  Serial.print("Hand Distance: "); Serial.println(distance);
-
-  if (distance > 2 && distance < TRIGGER_DISTANCE) {
-    Serial.println("Hand detected! Opening lid...");
-    // Smooth servo opening
-    for (int pos = CLOSED_ANGLE; pos <= OPEN_ANGLE; pos += 3) {
-      lidServo.write(pos);
-      delay(15);
-    }
-
-    // Keep lid open for 4 seconds to drop trash
-    delay(4000);
-
-    Serial.println("Closing lid...");
-    // Smooth gentle closing
-    for (int pos = OPEN_ANGLE; pos >= CLOSED_ANGLE; pos -= 3) {
-      lidServo.write(pos);
-      delay(15);
-    }
-    delay(500); // Rest before allowing another trigger
+  unsigned long now=millis();
+  if (now-lastPing>=75) {
+    lastPing=now; float d=distanceCM(9,10);
+    bool wasClear=clear; clear=d>=25;
+    if (!clear || !wasClear) clearSince=now;
+    if (d>0 && d<20 && state==0) state=1;
+    if (!clear && state==3) state=1; // Invalid echo also cancels closure.
+    if (d<0) Serial.println("Invalid echo: closure inhibited");
   }
-
-  delay(100);
+  if (state==2 && clear && now-clearSince>=4000) state=3;
+  if (now-lastMove>=20) {
+    lastMove=now;
+    if (state==1) { angle=min(OPEN,angle+2); lid.write(angle); if(angle==OPEN) {state=2; clearSince=now;} }
+    else if (state==3) { angle=max(CLOSED,angle-2); lid.write(angle); if(angle==CLOSED) state=0; }
+  }
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Physical Fabrication with Hot Melt Glue
-1. Cut out two circular eye holes on the front lid of a small cardboard box for the HC-SR04 sonar transducers.
-2. Secure the HC-SR04 with hot glue on the interior face pointing outwards.
-3. Glue the SG90 servo motor firmly inside the rear corner of the box wall.
-4. Hot-glue a popsicle stick or stiff wire link between the servo horn and the box lid to act as a mechanical lifting lever.
-5. Power up and test by waving your hand in front of the ultrasonic "eyes"!
+1. Verify 5V power and common ground. Test the unloaded servo before attaching the cardboard lid.
+2. Place a flat reference surface within sonar range beyond the 25cm clear threshold. A valid clear echo is needed to close; an empty beam may time out and keep the model open.
+3. Wave a hand at 10–15cm, remove it and check the four-second clear delay. Return the hand while closing: it should reopen.
+4. Disconnect ECHO with power off, then restart/test: invalid echoes must inhibit closure. Keep fingers out of the linkage throughout.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Trash Full Warning:** Mount a second HC-SR04 pointing downward inside the bin to alert `"BIN FULL! PLEASE EMPTY"` via a buzzer when trash fills up past 80%!
+Add a second downward-facing sensor for a bin-full indication, with spaced alternating pings.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

@@ -1,167 +1,118 @@
-# Project 10: Ultrasonic Tripwire Security Alarm
+# Project 10: Ultrasonic Change-Detection Alarm
 
-**Track:** Foundational Arduino & Basic Electronics  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Nano or Uno
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-Traditional security tripwires use fragile laser beams that are easily bypassed. In this project, students build an invisible ultrasonic acoustic barrier using the HC-SR04 sensor and an Arduino Nano. Mounted across a doorway or safe box, the sensor continuously monitors spatial distance. The moment an intruder walks across the threshold, the distance reading abruptly changes, triggering a loud pulsating alarm siren and strobe lighting!
+**Estimated session:** 60–75 minutes
 
-```mermaid
-flowchart TD
-    Sensor["HC-SR04 Sonar Transceiver"] --> Echo["Measure Reflection Time"]
-    Echo --> Dist["Calculate Distance in cm: (Time * 0.034) / 2"]
-    Dist --> Baseline{"Compare with Calibrated Baseline"}
-    
-    Baseline -->|Difference over 15cm| Intruder["INTRUSION DETECTED!"]
-    Intruder --> Siren["Pulsating Buzzer (800Hz - 1600Hz)"]
-    Intruder --> Strobe["Flashing Red Alert LEDs"]
-    
-    Baseline -->|Normal| GreenLED["Green LED Steady (Armed & Secure)"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Acoustic Physics:** Speed of sound in air (343 m/s at 20°C), ultrasonic frequencies (40 kHz, beyond human hearing), echo reflection.
-- **Microsecond Timing:** Calculating distance via time-of-flight equations ($d = rac{v 	imes t}{2}$).
-- **Security Systems Design:** Automatic baseline auto-calibration upon power-up, tamper detection.
+## What students build
 
----
+A sonar faces a fixed flat reference target. Ten valid samples establish a baseline; an object at least 20cm closer triggers a latched alarm. Missing/invalid echoes cause a distinct latched sensor fault rather than an armed indication. A button disarms/resets; pressing it again requests recalibration.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Nano V3.0 | 1 | [Duino.lk Nano V3.0](https://www.duino.lk/product/arduino-compatible-nano-v3-0/) |
-| HC-SR04 Ultrasonic Distance Sensor | 1 | [Duino.lk HC-SR04](https://www.duino.lk/product/ultrasonic-distance-measuring-transducer/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| 5mm Red LED (Alarm Strobe) | 1 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 5mm Green LED (Armed Indicator) | 1 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistors | 2 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| Piezo Electronic Buzzer | 1 | [Duino.lk Buzzer](https://www.duino.lk/product/dc-3-24v-electronic-buzzer/) |
-| Jumper Wires Male-to-Female | 4 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
-| Jumper Wires Male-to-Male | 6 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-male-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Nano and USB-C data cable | 1 |
+| HC-SR04 | 1 |
+| red and green LEDs | 1 each |
+| 1kΩ resistors | 3 |
+| passive piezo disc | 1 |
+| button | 1 |
+| breadboard/jumpers | 1 |
 
-| HC-SR04 Sensor Pin | Arduino Nano Pin | Purpose |
-| :--- | :--- | :--- |
-| **VCC** | 5V | Sensor power (+5V DC) |
-| **GND** | GND | Ground |
-| **TRIG** | Pin **D9** | 10-microsecond trigger pulse output |
-| **ECHO** | Pin **D10** | Echo return pulse input |
 
-| Other Components | Connection |
-| :--- | :--- |
-| **Green LED Anode** | Pin **D4** via 220Ω resistor (Armed Status) |
-| **Red LED Anode** | Pin **D5** via 220Ω resistor (Alarm Strobe) |
-| **Piezo Buzzer (+)** | Pin **D6** |
+## Complete wiring and power
 
----
+HC-SR04 VCC → board 5V; GND → board GND. These guides use 5V Uno/Nano boards. Never carry the 5V ECHO signal directly into a micro:bit. Each measurement has a timeout and readings outside 2–400cm are invalid; invalid does not mean “clear.” Wait at least 60ms between triggers on the same module; two-module builds alternate triggers at least 60ms apart to reduce crosstalk. Test your actual module against a flat target.
 
-## 5. Arduino C++ Source Code
+Buttons connect between their GPIO and GND and use `INPUT_PULLUP`: released is HIGH, pressed is LOW. Use opposite switched terminals, not the two legs already connected internally. No external pull-down resistor is required.
+
+Use a **passive piezo disc**, not the DC continuous alarm: GPIO → 1kΩ resistor → piezo lead; other lead → GND. The resistor limits drive current and the sound may be quiet. Solder flexible leads to the disc with adult supervision; never substitute a magnetic buzzer or speaker without a suitable driver.
+
+TRIG D9; ECHO D10; green LED D4 and red LED D5 each through 1kΩ, cathodes GND; piezo D6 through 1kΩ; reset/arm button D2 to GND. Board power is USB.
+
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 10: Ultrasonic Tripwire Security Alarm
- * Club: School Electronics & Innovation Club
- */
-
-const int PIN_TRIG    = 9;
-const int PIN_ECHO    = 10;
-const int PIN_LED_ARM = 4;
-const int PIN_LED_ALM = 5;
-const int PIN_BUZZER  = 6;
-
-float baselineDistance = 0.0;
-bool alarmTriggered = false;
-
-float measureDistanceCM() {
-  // Clear trigger pin
-  digitalWrite(PIN_TRIG, LOW);
-  delayMicroseconds(2);
-  
-  // Send 10us ultrasonic burst
-  digitalWrite(PIN_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PIN_TRIG, LOW);
-  
-  // Read echo bounce back duration in microseconds
-  long duration = pulseIn(PIN_ECHO, HIGH, 30000); // 30ms timeout
-  if (duration == 0) return 999.0; // Out of range
-  
-  // Distance in cm = (duration * 0.0343) / 2
-  return (duration * 0.0343) / 2.0;
+#include <Arduino.h>
+struct Button {
+  byte pin;
+  bool raw = HIGH, stable = HIGH;
+  unsigned long changed = 0;
+  void begin(byte p) { pin = p; pinMode(pin, INPUT_PULLUP);
+    raw = stable = digitalRead(pin); changed = millis(); }
+  bool update() {
+    bool r = digitalRead(pin);
+    if (r != raw) { raw = r; changed = millis(); }
+    if (millis() - changed >= 25 && stable != raw) {
+      stable = raw; return stable == LOW;
+    }
+    return false;
+  }
+  bool down() { return stable == LOW; }
+};
+float distanceCM(byte trig, byte echo) {
+  digitalWrite(trig, LOW); delayMicroseconds(2);
+  digitalWrite(trig, HIGH); delayMicroseconds(10); digitalWrite(trig, LOW);
+  unsigned long us = pulseIn(echo, HIGH, 25000UL);
+  float cm = us * 0.0343f / 2.0f;
+  return (us == 0 || cm < 2 || cm > 400) ? -1.0f : cm;
 }
-
+Button arm;
+byte mode=0, count=0, attempts=0; // 0 disarmed, 1 calibrating, 2 armed, 3 alarm, 4 fault
+float total=0, baseline=0;
+unsigned long lastSample=0;
+void calibrate() { count=attempts=0; total=0; mode=1; Serial.println("Calibrating..."); }
 void setup() {
-  pinMode(PIN_TRIG, OUTPUT);
-  pinMode(PIN_ECHO, INPUT);
-  pinMode(PIN_LED_ARM, OUTPUT);
-  pinMode(PIN_LED_ALM, OUTPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-
-  Serial.begin(9600);
-  Serial.println("Calibrating security perimeter in 3 seconds...");
-  
-  // Beep warning during calibration
-  for (int i = 0; i < 3; i++) {
-    digitalWrite(PIN_LED_ARM, HIGH);
-    tone(PIN_BUZZER, 800, 100);
-    delay(500);
-    digitalWrite(PIN_LED_ARM, LOW);
-    delay(500);
-  }
-
-  // Calculate average baseline distance over 10 samples
-  float sum = 0;
-  for (int i = 0; i < 10; i++) {
-    sum += measureDistanceCM();
-    delay(50);
-  }
-  baselineDistance = sum / 10.0;
-  
-  digitalWrite(PIN_LED_ARM, HIGH); // Steady green = ARMED
-  Serial.print("System Armed! Baseline Distance: ");
-  Serial.print(baselineDistance);
-  Serial.println(" cm");
+  Serial.begin(9600); arm.begin(2);
+  pinMode(9,OUTPUT); pinMode(10,INPUT);
+  pinMode(4,OUTPUT); pinMode(5,OUTPUT); pinMode(6,OUTPUT);
+  Serial.println("Place a reference target; press button to arm.");
 }
-
 void loop() {
-  float currentDist = measureDistanceCM();
-
-  // If distance changes by more than 20cm (intruder enters beam)
-  if (abs(currentDist - baselineDistance) > 20.0 && currentDist < baselineDistance) {
-    alarmTriggered = true;
-    Serial.println("🚨 INTRUSION DETECTED! Perimeter Breached!");
+  if (arm.update()) {
+    if (mode==0) calibrate(); else { mode=0; noTone(6); Serial.println("Disarmed/reset"); }
   }
-
-  if (alarmTriggered) {
-    digitalWrite(PIN_LED_ARM, LOW);
-    // Two-tone European Police Siren
-    for (int freq = 800; freq <= 1500; freq += 40) {
-      tone(PIN_BUZZER, freq);
-      digitalWrite(PIN_LED_ALM, HIGH);
-      delay(15);
-    }
-    digitalWrite(PIN_LED_ALM, LOW);
-    for (int freq = 1500; freq >= 800; freq -= 40) {
-      tone(PIN_BUZZER, freq);
-      delay(15);
-    }
-  } else {
-    delay(80); // Normal surveillance sample rate
+  unsigned long now=millis();
+  if ((mode==1 || mode==2) && now-lastSample>=75) {
+    lastSample=now; float d=distanceCM(9,10);
+    if (mode==1) {
+      attempts++;
+      if (d>0) { total+=d; count++; }
+      if (count==10) { baseline=total/count; mode=2; Serial.print("Baseline cm: "); Serial.println(baseline); }
+      else if (attempts>=20) { mode=4; Serial.println("Calibration failed: sensor fault"); }
+    } else if (d<0) { mode=4; Serial.println("Sensor fault: echo invalid"); }
+    else if (baseline-d>20) { mode=3; Serial.println("Closer object detected"); }
   }
+  digitalWrite(4,mode==2);
+  digitalWrite(5,(mode==3 || mode==4) && (now/250)%2==0);
+  if (mode==3) tone(6,(now/300)%2 ? 800:1200);
+  else if (mode==4 && (now/500)%2==0) tone(6,300);
+  else noTone(6);
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Innovation Challenges
-1. **Passcode Deactivation:** Add a tactile push button so the owner can enter a secret "click pattern" (e.g., Short-Short-Long) to disarm the alarm without having to unplug it!
-2. **Relay Floodlight:** Connect the alarm output to the club's [5V Relay Module](https://www.duino.lk/product/relay-board-module-5v-1-channel/) to automatically switch on a blinding security spotlight!
+1. Put a broad flat target 60–100cm away and press arm. Green lights only after ten valid readings.
+2. Insert an object more than 20cm nearer: red and alternating tones latch. Press to disarm.
+3. Disconnect the echo wire with power off, restart and attempt calibration: it must report fault, never armed. Restore the circuit and repeat.
+4. While armed, remove the reference target: invalid echoes must indicate a fault. This is a demonstration, not a security product.
+
+## Extension
+
+Add an LCD showing baseline, current reading and explicit armed/fault states.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

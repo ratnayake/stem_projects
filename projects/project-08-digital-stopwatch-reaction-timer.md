@@ -1,180 +1,134 @@
-# Project 08: Formula 1 Reaction Speed Tester
+# Project 08: Two-Player Reaction Speed Tester
 
-**Track:** Foundational Arduino & Basic Electronics  
-**Difficulty Level:** Beginner to Intermediate (Grades 6–9)  
-**Estimated Time:** 45–60 Minutes  
-**Target Group:** 2–4 Students (Great for club tournaments!)  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Beginner/intermediate
 
-## 1. Project Overview
-In Formula 1 motorsport, driver reaction times to starting lights are measured in thousandths of a second. In this project, students build a two-player reflex competition system. Five red LEDs illuminate one by one, accompanied by warning beeps. After a random suspense delay, all five lights simultaneously extinguish ("LIGHTS OUT AND AWAY WE GO!"). Players must hit their push buttons instantly. The Arduino measures reaction times down to the single millisecond and declares the winner on the Serial Monitor or buzzer!
+**Estimated session:** 60–75 minutes
 
-```mermaid
-sequenceDiagram
-    participant Arduino
-    participant LEDs as 5 Red Starting LEDs
-    participant Buzzer
-    actor P1 as Player 1 Button
-    actor P2 as Player 2 Button
+**Group:** 2–3 students; shared inventory rotates between activities.
 
-    Arduino->>LEDs: Light 1 ON (Beep)
-    Arduino->>LEDs: Light 2 ON (Beep)
-    Arduino->>LEDs: Light 3 ON (Beep)
-    Arduino->>LEDs: Light 4 ON (Beep)
-    Arduino->>LEDs: Light 5 ON (Beep)
-    Note over Arduino: Random suspense delay (1000ms - 3500ms)
-    Arduino->>LEDs: ALL LIGHTS OFF!
-    Note over Arduino: Start Microsecond Precision Stopwatch
-    P1->>Arduino: Pressed at +214ms
-    P2->>Arduino: Pressed at +289ms
-    Arduino->>Buzzer: Play Victory Fanfare for Player 1!
-```
+**Revised:** 14 October 2026
 
----
+## What students build
 
-## 2. Learning Objectives (STEM Concepts)
-- **Human Biology & Neuroscience:** Neural pathways, visual stimulus processing speed, neuromuscular reaction delays (typical human reaction is 200–250ms).
-- **Computer Science:** Real-time timing functions (`millis()` and `micros()`), pseudorandom number generators (`random()`), false-start jump detection.
-- **Electronics:** Multi-LED array multiplexing and debounce filtering.
+Two buttons start a five-light reaction game. Both must be released before the sequence starts. Every countdown stage checks for false starts. Once the LEDs extinguish, millisecond reaction times are recorded; unpressed players time out after three seconds and equal readings are reported as a tie.
 
----
+## Materials and preparation
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| 5mm Red LEDs | 5 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistors | 5 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| 10kΩ Resistors | 2 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| Tactile Push Buttons 12x12mm | 2 | [Duino.lk Push Button](https://www.duino.lk/product/tactile-push-button-switch-4pins-12x12x7-3mm/) |
-| Piezo Electronic Buzzer | 1 | [Duino.lk Buzzer](https://www.duino.lk/product/dc-3-24v-electronic-buzzer/) |
-| Jumper Wires Male-to-Male | 14 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-male-20cm-40pcs/) |
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
----
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Uno and USB data cable | 1 |
+| breadboard/jumpers | 1 |
+| red LEDs | 5 |
+| 1kΩ resistors | 6 |
+| push buttons | 2 |
+| passive piezo disc | 1 |
 
-## 4. Hardware Wiring & Pinout Table
 
-| Component | Pin Connected To | Rationale |
-| :--- | :--- | :--- |
-| **LEDs 1 to 5 (Anodes)** | Arduino Pins **D3, D4, D5, D6, D7** | Five individual starting lights |
-| **All LED Cathodes** | Ground rail via 220Ω resistors | Current limiting |
-| **Player 1 Button** | Arduino **D2** (with 10kΩ pull-down to GND) | Player 1 trigger |
-| **Player 2 Button** | Arduino **D8** (with 10kΩ pull-down to GND) | Player 2 trigger |
-| **Piezo Buzzer (+)** | Arduino **D9** | Race start tone |
+## Complete wiring and power
 
----
+Buttons connect between their GPIO and GND and use `INPUT_PULLUP`: released is HIGH, pressed is LOW. Use opposite switched terminals, not the two legs already connected internally. No external pull-down resistor is required.
 
-## 5. Arduino C++ Source Code
+Use a **passive piezo disc**, not the DC continuous alarm: GPIO → 1kΩ resistor → piezo lead; other lead → GND. The resistor limits drive current and the sound may be quiet. Solder flexible leads to the disc with adult supervision; never substitute a magnetic buzzer or speaker without a suitable driver.
+
+| Component | Wiring |
+| :-- | :-- |
+| Five red LEDs | D3–D7, each via its own 1kΩ to anode; cathodes GND |
+| Player 1 button | D2 to GND |
+| Player 2 button | D8 to GND |
+| Piezo | D9 via 1kΩ; other lead GND |
+
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 08: Formula 1 Reaction Speed Tester
- * Club: School Electronics & Innovation Club
- */
-
-const int LED_PINS[5] = {3, 4, 5, 6, 7};
-const int PIN_BTN_P1  = 2;
-const int PIN_BTN_P2  = 8;
-const int PIN_BUZZER  = 9;
-
-void setup() {
-  for (int i = 0; i < 5; i++) {
-    pinMode(LED_PINS[i], OUTPUT);
+#include <Arduino.h>
+struct Button {
+  byte pin;
+  bool raw = HIGH, stable = HIGH;
+  unsigned long changed = 0;
+  void begin(byte p) { pin = p; pinMode(pin, INPUT_PULLUP);
+    raw = stable = digitalRead(pin); changed = millis(); }
+  bool update() {
+    bool r = digitalRead(pin);
+    if (r != raw) { raw = r; changed = millis(); }
+    if (millis() - changed >= 25 && stable != raw) {
+      stable = raw; return stable == LOW;
+    }
+    return false;
   }
-  pinMode(PIN_BTN_P1, INPUT);
-  pinMode(PIN_BTN_P2, INPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-
-  Serial.begin(9600);
-  randomSeed(analogRead(A5)); // Random seed from unused floating pin
-  Serial.println("=== F1 REACTION TESTER READY ===");
-  Serial.println("Press any button to start race sequence...");
+  bool down() { return stable == LOW; }
+};
+Button p1, p2;
+const byte leds[5] = {3,4,5,6,7};
+byte state = 0, lit = 0;
+unsigned long since = 0, suspense = 0, raceStart = 0;
+unsigned long t1 = 0, t2 = 0;
+bool got1 = false, got2 = false;
+void lightsOff() { for (byte p : leds) digitalWrite(p, LOW); }
+void finish() {
+  if (got1) { Serial.print("P1: "); Serial.print(t1); Serial.println(" ms"); }
+  else Serial.println("P1: timeout");
+  if (got2) { Serial.print("P2: "); Serial.print(t2); Serial.println(" ms"); }
+  else Serial.println("P2: timeout");
+  if (!got1 && !got2) Serial.println("No winner");
+  else if (got1 && got2 && t1 == t2) Serial.println("Tie at millisecond resolution");
+  else Serial.println(got1 && (!got2 || t1 < t2) ? "P1 wins" : "P2 wins");
+  state = 5; since = millis();
 }
-
+void setup() {
+  Serial.begin(9600); p1.begin(2); p2.begin(8);
+  for (byte p : leds) pinMode(p, OUTPUT);
+  pinMode(9, OUTPUT); lightsOff();
+  randomSeed(analogRead(A0));
+  Serial.println("Press either button to start; then release both.");
+}
 void loop() {
-  // Wait for either player to trigger start
-  while (digitalRead(PIN_BTN_P1) == LOW && digitalRead(PIN_BTN_P2) == LOW) {
-    delay(10);
-  }
-  delay(1000); // Breathe before race starts
-
-  Serial.println("
-Starting grid sequence...");
-  // Light up the 5 red lights sequentially
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(LED_PINS[i], HIGH);
-    tone(PIN_BUZZER, 440, 100);
-    delay(1000);
-  }
-
-  // Random delay between 1.0 and 3.5 seconds
-  int suspenseDelay = random(1000, 3500);
-  unsigned long startWait = millis();
-  bool falseStart = false;
-
-  // Check for false starts (jump starts) during suspense period
-  while (millis() - startWait < suspenseDelay) {
-    if (digitalRead(PIN_BTN_P1) == HIGH) {
-      Serial.println("PENALTY! Player 1 False Start (Jump Start)!");
-      falseStart = true;
-      break;
+  bool hit1 = p1.update(), hit2 = p2.update();
+  unsigned long now = millis();
+  if (state == 0 && (hit1 || hit2)) state = 1;
+  else if (state == 1 && !p1.down() && !p2.down()) {
+    state = 2; lit = 0; since = now;
+    Serial.println("\nStarting light sequence...");
+  } else if (state == 2 || state == 3) {
+    // Raw press stops the sequence too, including a press not yet debounced.
+    if (digitalRead(2) == LOW || digitalRead(8) == LOW) {
+      Serial.println("False start: race cancelled."); lightsOff(); tone(9,150,400);
+      state = 5; since = now; return;
     }
-    if (digitalRead(PIN_BTN_P2) == HIGH) {
-      Serial.println("PENALTY! Player 2 False Start (Jump Start)!");
-      falseStart = true;
-      break;
+    if (state == 2 && now - since >= 1000) {
+      digitalWrite(leds[lit], HIGH); tone(9,440,100); lit++; since = now;
+      if (lit == 5) { state = 3; suspense = random(1000,3501); }
+    } else if (state == 3 && now - since >= suspense) {
+      lightsOff(); raceStart = millis(); got1 = got2 = false;
+      tone(9,880,100); state = 4;
     }
+  } else if (state == 4) {
+    // Times include the 25ms debounce window; use the same filter for both players.
+    if (hit1 && !got1) { t1 = now - raceStart; got1 = true; }
+    if (hit2 && !got2) { t2 = now - raceStart; got2 = true; }
+    if ((got1 && got2) || now - raceStart >= 3000) finish();
+  } else if (state == 5 && now - since >= 2000 && !p1.down() && !p2.down()) {
+    state = 0; Serial.println("Press either button for another race.");
   }
-
-  if (falseStart) {
-    tone(PIN_BUZZER, 150, 800);
-    for (int i = 0; i < 5; i++) digitalWrite(LED_PINS[i], LOW);
-    delay(2000);
-    return;
-  }
-
-  // LIGHTS OUT!
-  for (int i = 0; i < 5; i++) {
-    digitalWrite(LED_PINS[i], LOW);
-  }
-  tone(PIN_BUZZER, 880, 200); // High pitch GO tone!
-  unsigned long raceStartTime = millis();
-
-  // Wait for winner reaction
-  unsigned long p1Time = 0;
-  unsigned long p2Time = 0;
-
-  while (p1Time == 0 || p2Time == 0) {
-    if (p1Time == 0 && digitalRead(PIN_BTN_P1) == HIGH) {
-      p1Time = millis() - raceStartTime;
-    }
-    if (p2Time == 0 && digitalRead(PIN_BTN_P2) == HIGH) {
-      p2Time = millis() - raceStartTime;
-    }
-    // Timeout after 3 seconds if nobody clicks
-    if (millis() - raceStartTime > 3000) break;
-  }
-
-  Serial.println(">>> RESULTS <<<");
-  Serial.print("Player 1 Reaction: "); Serial.print(p1Time); Serial.println(" ms");
-  Serial.print("Player 2 Reaction: "); Serial.print(p2Time); Serial.println(" ms");
-
-  if (p1Time > 0 && (p1Time < p2Time || p2Time == 0)) {
-    Serial.println("🏆 PLAYER 1 WINS!");
-    tone(PIN_BUZZER, 1046, 500);
-  } else if (p2Time > 0 && (p2Time < p1Time || p1Time == 0)) {
-    Serial.println("🏆 PLAYER 2 WINS!");
-    tone(PIN_BUZZER, 1318, 500);
-  }
-
-  delay(3000); // Cooldown before next race
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 7. Innovation Challenges
-1. Combine with the [16x2 LCD](https://www.duino.lk/product/lcd-16x02-display-blue/) to make the machine totally portable for school exhibition game booths!
-2. Track the "All-Time Club Record" saved in Arduino internal EEPROM non-volatile memory so records persist even after unplugging power.
+1. Upload and open Serial Monitor at 9600 baud. Press to start and release both buttons.
+2. Press during each of the five lights and during suspense: every early attempt must cancel the race.
+3. Run with two presses after lights-out, one player absent, and both absent; verify timeout messages and winners.
+4. Hold a button at start and at the end: the next race must wait for release. Timing includes filtering and is not a laboratory measurement.
+
+## Extension
+
+Show results on the club LCD; keep the existing false-start and timeout behaviour.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

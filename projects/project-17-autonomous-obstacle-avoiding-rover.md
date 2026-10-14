@@ -1,223 +1,122 @@
-# Project 17: Autonomous Obstacle-Avoiding Smart Rover
+# Project 17: Obstacle-Avoiding Classroom Rover
 
-**Track:** Robotics, Motors & Wireless Control  
-**Difficulty Level:** Advanced (Grades 8–11)  
-**Estimated Time:** 90–120 Minutes  
-**Target Group:** 2–3 Students  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Advanced
 
-## 1. Project Overview
-Building a self-navigating autonomous mobile robot is the premier capstone project of any school innovation club. In this project, students assemble the 2WD robot chassis with an Arduino Uno, L298N driver, and an HC-SR04 ultrasonic sensor mounted atop an SG90 panning servo motor. As the rover navigates an obstacle course, it drives forward until detecting a barrier. It then pauses, sweeps its sonar "head" 60 degrees left and 60 degrees right, evaluates which side offers the widest corridor, steers toward freedom, and resumes roaming!
+**Estimated session:** 120–150 minutes
 
-```mermaid
-flowchart TD
-    Drive["Drive Forward (Normal Cruising Speed)"] --> CheckSonar{"Distance under 25 cm?"}
-    CheckSonar -->|No| Drive
-    CheckSonar -->|Obstacle Ahead| Stop["Emergency Stop & Brake"]
-    
-    Stop --> LookRight["Servo Turns 30° (Measure Right Distance)"]
-    LookRight --> LookLeft["Servo Turns 150° (Measure Left Distance)"]
-    LookLeft --> LookCenter["Servo Re-centers to 90°"]
-    
-    LookCenter --> Compare{"Which side is clearer?"}
-    Compare -->|Right Distance Greater| TurnR["Spin Turn Right for 400ms"]
-    Compare -->|Left Distance Greater| TurnL["Spin Turn Left for 400ms"]
-    
-    TurnR --> Drive
-    TurnL --> Drive
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Autonomous Robotics:** Sensor fusion, environmental mapping, reactive navigation algorithms.
-- **Kinematics of Differential Drive:** Turning radius calculation, wheel slip vs. traction.
-- **System Integration:** Mechanical chassis assembly, balancing center of gravity, battery voltage drops under motor load.
+## What students build
 
----
+After completing the motor bench test, mount sonar on a servo. The rover drives slowly on valid clear readings, stops for an obstacle, scans right and left, and makes a timed turn toward a valid clear direction. A missing echo stops the rover; an empty room with no reflecting targets may therefore keep it stopped. Reverse is deliberately omitted because this build has no rear sensor.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Duino Smart Robot Car Chassis Kit | 1 | [Duino.lk Robot Kit](https://www.duino.lk/product/duino-obstacle-avoidance-smart-robot-car-kit/) |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| L298N Dual H-Bridge Motor Driver Module | 1 | [Duino.lk L298N](https://www.duino.lk/product/l298n-dual-h-bridge-dc-stepper-motor-driver/) |
-| HC-SR04 Ultrasonic Distance Sensor | 1 | [Duino.lk HC-SR04](https://www.duino.lk/product/ultrasonic-distance-measuring-transducer/) |
-| SG90 9g Micro Servo Motor | 1 | [Duino.lk SG90 Servo](https://www.duino.lk/product/servo-motor-sg90-9g/) |
-| 60W Hot Melt Glue Gun (to mount servo & sensor) | 1 | [Duino.lk Glue Gun](https://www.duino.lk/product/60w-glue-gun-nozzle-sd-a6/) |
-| 9V Battery Snap Connector | 1 | [Duino.lk 9V Snap](https://www.duino.lk/product/9v-battery-snap-on-connector-clip/) |
-| Jumper Wires Male-to-Female | 10 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-female-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| robot kit: chassis, motors, Uno/cable, L298N, HC-SR04, SG90, 4×AA holder | 1 |
+| AA cells | 4 |
+| 5V/2A USB power bank and USB power breakout | 1 each |
+| 470µF capacitor ≥10V | 1 |
+| 100nF motor capacitors | 2 |
+| motor switch, 2A fuse/holder, power wire | shared |
+| jumpers, servo horn/mount, glue gun/11mm sticks | shared |
 
-| Function | Pin Connection |
-| :--- | :--- |
-| **L298N ENA / ENB** | Arduino **D5** / **D6** (PWM Speed Control) |
-| **L298N IN1, IN2, IN3, IN4** | Arduino **D7, D8, D9, D10** |
-| **HC-SR04 TRIG / ECHO** | Arduino **D12** / **D13** |
-| **Panning SG90 Servo PWM** | Arduino **D11** |
-| **Motor Battery Supply** | 4x AA Battery Holder (or 9V) to L298N +12V & GND |
-| **Arduino Power** | Vin & GND connected from L298N terminal blocks |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Use the full robot kit's L298N, motors, chassis and **4×AA holder**; verify that the delivered holder really is four-cell before purchase. Fit four matched alkaline AA cells (nominal 6V) for motor power. The L298N loses voltage, so this is a modest-speed model; the available torque must be tested. Do not replace the pack with a PP3 9V battery, connect motors to GPIO, or use the breadboard regulator for motor power.
+
+**Remove ENA and ENB jumpers** before wiring PWM, and **remove the separate 5V-EN/regulator-enable jumper** to disable the module's onboard regulator. Supply its labelled 5V logic terminal from the external regulated 5V source. On modules with different routing, confirm the board diagram before connecting power. Never join its regulator output to another 5V source.
+
+| L298N/module terminal | Connection |
+| :-- | :-- |
+| Motor supply, often labelled +12V/Vs | Four-AA positive through switch and inline 2A fuse |
+| GND | Four-AA negative, external 5V negative and board GND |
+| Logic +5V | External regulated 5V; 5V-EN jumper removed |
+| ENA / ENB | Board D5 / D6; both enable jumpers removed |
+| IN1 / IN2 / IN3 / IN4 | D7 / D8 / D9 / D10 |
+| OUT1 / OUT2 | Left motor |
+| OUT3 / OUT4 | Right motor |
+| 100nF ceramic capacitors | One across each motor's terminals |
+
+Use insulated stranded power wire (about 22AWG), screw terminals and secure strain relief for motor current, not thin jumper leads or breadboard rails. The fuse protects wiring against a short; it does not make stalled motors safe. Verify motors are rated 3–6V, driver flyback diodes are fitted, and the motor case/driver does not overheat. If the four-AA/L298N combination cannot start reliably under the intended load, stop and use a separately quoted lower-loss driver rather than raising voltage blindly. The revised budget includes initial cells and spares, not recurring annual replacements.
+
+For an untethered rover use the listed enclosed **USB power bank, fixed 5V output and at least 2A total continuous rating**, with two outputs: one powers the Uno through its USB socket/cable; the other powers L298N logic and the SG90 rail through a USB-A power breakout/screw-terminal cable. Add a 470µF ≥10V capacitor near the servo. Verify the power bank stays on at idle and holds 5V during servo motion. Do not use a USB-PD higher-voltage trigger, connect either pack to Uno Vin, or join this 5V rail to the Uno 5V pin. Join grounds as shown. For bench testing, the board can use computer USB and a separate 5V/2A adapter can provide the peripheral rail; do not connect both peripheral sources at once.
+
+HC-SR04 VCC → board 5V; GND → board GND. These guides use 5V Uno/Nano boards. Never carry the 5V ECHO signal directly into a micro:bit. Each measurement has a timeout and readings outside 2–400cm are invalid; invalid does not mean “clear.” Wait at least 60ms between triggers on the same module; two-module builds alternate triggers at least 60ms apart to reduce crosstalk. Test your actual module against a flat target.
+
+HC-SR04 TRIG D12, ECHO D13, VCC board 5V and GND common. Servo signal D11, red external peripheral 5V, brown common ground. Keep D5/D6 for motor PWM: the Uno Servo library uses Timer1 and disables PWM on D9/D10, which are used only as digital direction pins here. Attach the sensor securely on a balanced lightweight mount.
+
+## Complete source code
+
+Install **Servo 1.2.2 by Arduino** from Library Manager.
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 17: Autonomous Obstacle-Avoiding Smart Rover
- * Club: School Electronics & Innovation Club
- */
-
+#include <Arduino.h>
 #include <Servo.h>
-
-const int ENA = 5;
-const int ENB = 6;
-const int IN1 = 7;
-const int IN2 = 8;
-const int IN3 = 9;
-const int IN4 = 10;
-
-const int TRIG_PIN  = 12;
-const int ECHO_PIN  = 13;
-const int SERVO_PIN = 11;
-
-const int OBSTACLE_LIMIT = 25; // Stop when object is closer than 25cm
-const int MOTOR_SPEED    = 180; // Default cruising speed (0-255)
-
-Servo neckServo;
-
-float pingDistance() {
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  long duration = pulseIn(ECHO_PIN, HIGH, 25000);
-  if (duration == 0) return 300.0;
-  return (duration * 0.0343) / 2.0;
+const byte ENA=5, ENB=6, IN1=7, IN2=8, IN3=9, IN4=10;
+void motor(int left, int right) {
+  // Disable bridges before changing direction.
+  analogWrite(ENA,0); analogWrite(ENB,0);
+  digitalWrite(IN1,left>0); digitalWrite(IN2,left<0);
+  digitalWrite(IN3,right>0); digitalWrite(IN4,right<0);
+  analogWrite(ENA,constrain(abs(left),0,255));
+  analogWrite(ENB,constrain(abs(right),0,255));
 }
-
-void forward() {
-  analogWrite(ENA, MOTOR_SPEED);
-  analogWrite(ENB, MOTOR_SPEED);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
+void stopCar() { motor(0,0); } // Enable LOW: coast; this is not active braking.
+void beginMotors() {
+  for(byte p=5;p<=10;p++) { digitalWrite(p,LOW); pinMode(p,OUTPUT); }
+  stopCar();
 }
-
-void reverse() {
-  analogWrite(ENA, MOTOR_SPEED);
-  analogWrite(ENB, MOTOR_SPEED);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
+float distanceCM(byte trig, byte echo) {
+  digitalWrite(trig, LOW); delayMicroseconds(2);
+  digitalWrite(trig, HIGH); delayMicroseconds(10); digitalWrite(trig, LOW);
+  unsigned long us = pulseIn(echo, HIGH, 25000UL);
+  float cm = us * 0.0343f / 2.0f;
+  return (us == 0 || cm < 2 || cm > 400) ? -1.0f : cm;
 }
-
-void turnLeft(int ms) {
-  analogWrite(ENA, MOTOR_SPEED);
-  analogWrite(ENB, MOTOR_SPEED);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  delay(ms);
-}
-
-void turnRight(int ms) {
-  analogWrite(ENA, MOTOR_SPEED);
-  analogWrite(ENB, MOTOR_SPEED);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
-  delay(ms);
-}
-
-void stopCar() {
-  analogWrite(ENA, 0);
-  analogWrite(ENB, 0);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
-}
-
+Servo head;
+const int SPEED=130;
+float look(int angle) { head.write(angle); delay(450); return distanceCM(12,13); }
 void setup() {
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-
-  neckServo.attach(SERVO_PIN);
-  neckServo.write(90); // Look straight ahead
-  delay(500);
-
-  Serial.begin(9600);
-  Serial.println("Autonomous Rover Initialized.");
-  delay(2000); // 2 second pause before driving
+  Serial.begin(9600); beginMotors(); pinMode(12,OUTPUT); pinMode(13,INPUT);
+  head.attach(11); head.write(90); delay(2000);
 }
-
 void loop() {
-  float distanceAhead = pingDistance();
-
-  if (distanceAhead > OBSTACLE_LIMIT) {
-    forward();
-    delay(50);
-  } else {
-    // Obstacle detected!
-    stopCar();
-    delay(200);
-
-    // Back up slightly
-    reverse();
-    delay(300);
-    stopCar();
-
-    // Look Right (30 degrees)
-    neckServo.write(30);
-    delay(400);
-    float distRight = pingDistance();
-
-    // Look Left (150 degrees)
-    neckServo.write(150);
-    delay(500);
-    float distLeft = pingDistance();
-
-    // Return to Center
-    neckServo.write(90);
-    delay(300);
-
-    // Evaluate best direction
-    if (distRight >= distLeft && distRight > 20) {
-      turnRight(450); // Spin right
-    } else if (distLeft > distRight && distLeft > 20) {
-      turnLeft(450);  // Spin left
-    } else {
-      turnRight(900); // Dead-end trapped: 180 degree U-turn
-    }
-  }
+  float ahead=distanceCM(12,13);
+  if(ahead<0) { stopCar(); Serial.println("Echo invalid: stopped"); delay(150); return; }
+  if(ahead>30) { motor(SPEED,SPEED); delay(75); return; }
+  stopCar(); delay(150);
+  float right=look(30), left=look(150);
+  head.write(90); delay(450);
+  if(right>30 && (left<0 || right>=left)) motor(SPEED,-SPEED);
+  else if(left>30) motor(-SPEED,SPEED);
+  else { stopCar(); Serial.println("No valid clear route"); delay(150); return; }
+  delay(350); stopCar(); delay(100);
+  // The next loop remeasures before allowing forward movement.
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Testing in a Maze
-1. Construct an obstacle maze in the classroom using cardboard boxes and school bags.
-2. Place the rover on the floor and turn on battery power.
-3. Observe how the rover roams gracefully, stopping cleanly 25cm before impact and scanning both ways before deciding its escape route!
+1. Complete project 16 with wheels lifted. Check sensor distance against a ruler, then check servo angles without driving.
+2. Power from the USB bank and AA pack; sweep the servo and check for resets or power-bank shutdown.
+3. On the floor at low speed, approach broad flat cardboard obstacles. Tune SPEED, the 30cm threshold and 350ms turn duration for the actual chassis. Keep the swept wheel path clear.
+4. Cause an invalid echo and verify wheels stop, including after a turn. Test a dead end: the rover should wait rather than make a blind reverse. Use only a supervised floor course, away from stairs.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. **Horn & Warning Siren:** Incorporate the piezo buzzer so the robot sounds a short beep whenever it shifts into reverse!
+Add separately tested rear sensing before implementing reverse manoeuvres; add sample filtering after observing actual sensor noise.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

@@ -1,149 +1,107 @@
-# Project 06: Four-Way Traffic Light with Pedestrian Crossing
+# Project 06: Single Traffic Signal with Pedestrian Request
 
-**Track:** Foundational Arduino & Basic Electronics  
-**Difficulty Level:** Beginner (Grades 6–9)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2–3 Students  
+**Platform:** Arduino Nano or Uno
 
----
+**Difficulty:** Beginner
 
-## 1. Project Overview
-Traffic light systems are the classic foundational project in embedded systems. In this project, students use an **Arduino Nano** or **Uno R3** on a breadboard to wire a multi-LED traffic signal sequence (Green -> Yellow -> Red). A momentary tactile push button acts as a pedestrian crossing request button. When pressed, the controller safely transitions the traffic lights to Red, sounds a pedestrian buzzer chime, and then resumes normal operation.
+**Estimated session:** 60 minutes
 
-```mermaid
-stateDiagram-v2
-    [*] --> TrafficGreen
-    TrafficGreen --> TrafficYellow : Pedestrian Button Pressed (or Timer Expired)
-    TrafficYellow --> TrafficRed : After 3 Seconds
-    TrafficRed --> PedestrianWalk : Turn Red ON
-    PedestrianWalk --> TrafficGreen : After 8 Seconds + Buzzer Beeping
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Electronics Fundamentals:** LED polarity (Anode vs. Cathode), Ohm's Law ($V = IR$) for current-limiting resistors, switch pull-down circuits.
-- **Embedded C++:** Digital I/O (`pinMode`, `digitalWrite`, `digitalRead`), state machine sequencing, non-blocking timing concepts.
-- **Civic Engineering:** Municipal traffic flow logic, pedestrian safety systems.
+## What students build
 
----
+One red/yellow/green traffic signal stays green until a pedestrian requests a crossing. A non-blocking state machine keeps checking the button during each phase; requests during a crossing are served by that crossing, while a new request during the return-to-green phase waits for the minimum green time. This is a model of one road crossing, not a four-way junction.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Nano V3.0 (Type-C) | 1 | [Duino.lk Nano V3.0](https://www.duino.lk/product/arduino-compatible-nano-v3-0/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
-| 5mm LEDs (1x Red, 1x Yellow, 1x Green) | 3 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistors (for LEDs) | 3 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| 10kΩ Resistor (for Pull-Down) | 1 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| Tactile Push Button 12x12mm | 1 | [Duino.lk Push Button](https://www.duino.lk/product/tactile-push-button-switch-4pins-12x12x7-3mm/) |
-| Piezo Electronic Buzzer | 1 | [Duino.lk Buzzer](https://www.duino.lk/product/dc-3-24v-electronic-buzzer/) |
-| Jumper Wires Male-to-Male | 10 | [Duino.lk Jumper Wires](https://www.duino.lk/product/jumper-wire-male-to-male-20cm-40pcs/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Circuit Diagram & Pinout Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Nano and USB-C data cable | 1 |
+| full breadboard and jumpers | 1 |
+| red/yellow/green LED | 1 each |
+| 1kΩ through-hole resistors | 4 |
+| passive piezo disc | 1 |
+| push button | 1 |
 
-```
-      +5V --- [Tactile Button] --- Pin D2 --- [10k Resistor] --- GND
-      
-      Pin D8  --- [220 Ohm] --->|--- (Green LED)   --- GND
-      Pin D9  --- [220 Ohm] --->|--- (Yellow LED)  --- GND
-      Pin D10 --- [220 Ohm] --->|--- (Red LED)     --- GND
-      Pin D11 ---------------------- (+) Buzzer (-) --- GND
-```
 
-| Component | Pin Connected To | Rationale |
-| :--- | :--- | :--- |
-| **Green LED Anode** | Arduino **D8** via 220Ω | Active HIGH control |
-| **Yellow LED Anode** | Arduino **D9** via 220Ω | Active HIGH control |
-| **Red LED Anode** | Arduino **D10** via 220Ω | Active HIGH control |
-| **Buzzer (+)** | Arduino **D11** | Audible pedestrian walking chirp |
-| **Push Button** | Arduino **D2** (External Interruptible pin) | Digital input with 10kΩ pull-down to GND |
+## Complete wiring and power
 
----
+Buttons connect between their GPIO and GND and use `INPUT_PULLUP`: released is HIGH, pressed is LOW. Use opposite switched terminals, not the two legs already connected internally. No external pull-down resistor is required.
 
-## 5. Arduino C++ Source Code
+Use a **passive piezo disc**, not the DC continuous alarm: GPIO → 1kΩ resistor → piezo lead; other lead → GND. The resistor limits drive current and the sound may be quiet. Solder flexible leads to the disc with adult supervision; never substitute a magnetic buzzer or speaker without a suitable driver.
+
+| Component | Connection |
+| :-- | :-- |
+| Green LED | D8 → 1kΩ → anode; cathode → GND |
+| Yellow LED | D9 → 1kΩ → anode; cathode → GND |
+| Red LED | D10 → 1kΩ → anode; cathode → GND |
+| Piezo | D11 via 1kΩ; other lead GND |
+| Request button | D2 to GND |
+
+## Complete source code
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 06: Four-Way Traffic Light with Pedestrian Crossing
- * Club: School Electronics & Innovation Club
- */
-
-const int PIN_GREEN   = 8;
-const int PIN_YELLOW  = 9;
-const int PIN_RED     = 10;
-const int PIN_BUZZER  = 11;
-const int PIN_BUTTON  = 2;
-
-bool pedestrianRequested = false;
-
-void setup() {
-  pinMode(PIN_GREEN, OUTPUT);
-  pinMode(PIN_YELLOW, OUTPUT);
-  pinMode(PIN_RED, OUTPUT);
-  pinMode(PIN_BUZZER, OUTPUT);
-  pinMode(PIN_BUTTON, INPUT);
-
-  // Initialize with Traffic Green ON
-  digitalWrite(PIN_GREEN, HIGH);
-  digitalWrite(PIN_YELLOW, LOW);
-  digitalWrite(PIN_RED, LOW);
-  digitalWrite(PIN_BUZZER, LOW);
+#include <Arduino.h>
+struct Button {
+  byte pin;
+  bool raw = HIGH, stable = HIGH;
+  unsigned long changed = 0;
+  void begin(byte p) { pin = p; pinMode(pin, INPUT_PULLUP);
+    raw = stable = digitalRead(pin); changed = millis(); }
+  bool update() {
+    bool r = digitalRead(pin);
+    if (r != raw) { raw = r; changed = millis(); }
+    if (millis() - changed >= 25 && stable != raw) {
+      stable = raw; return stable == LOW;
+    }
+    return false;
+  }
+  bool down() { return stable == LOW; }
+};
+Button request;
+byte phase = 0;
+bool pending = false;
+unsigned long phaseSince = 0;
+void setPhase(byte p) {
+  phase = p; phaseSince = millis();
+  digitalWrite(8, p == 0); digitalWrite(9, p == 1); digitalWrite(10, p >= 2);
+  noTone(11);
 }
-
+void setup() {
+  for (byte p = 8; p <= 11; p++) pinMode(p, OUTPUT);
+  request.begin(2); setPhase(0);
+}
 void loop() {
-  // Check if pedestrian pushed the button
-  if (digitalRead(PIN_BUTTON) == HIGH) {
-    pedestrianRequested = true;
-  }
-
-  // Normal Green Cycle (runs for 5 seconds unless button is pressed)
-  for (int i = 0; i < 50; i++) {
-    if (digitalRead(PIN_BUTTON) == HIGH) {
-      pedestrianRequested = true;
-    }
-    delay(100);
-  }
-
-  // If pedestrian requested crossing, execute safe transition
-  if (pedestrianRequested) {
-    // 1. Transition: Green OFF, Yellow ON for 2.5s
-    digitalWrite(PIN_GREEN, LOW);
-    digitalWrite(PIN_YELLOW, HIGH);
-    delay(2500);
-
-    // 2. Yellow OFF, Red ON (Traffic Stopped)
-    digitalWrite(PIN_YELLOW, LOW);
-    digitalWrite(PIN_RED, HIGH);
-    delay(1000);
-
-    // 3. Pedestrian Walking Period: Beep buzzer intermittently
-    for (int b = 0; b < 10; b++) {
-      digitalWrite(PIN_BUZZER, HIGH);
-      delay(200);
-      digitalWrite(PIN_BUZZER, LOW);
-      delay(400);
-    }
-
-    // 4. Return to normal: Red OFF, Green ON
-    digitalWrite(PIN_RED, LOW);
-    digitalWrite(PIN_GREEN, HIGH);
-    pedestrianRequested = false;
-    delay(3000); // Minimum green hold time
+  bool press = request.update();
+  if (press && (phase == 0 || phase == 1)) pending = true;
+  unsigned long elapsed = millis() - phaseSince;
+  if (phase == 0 && pending && elapsed >= 3000) setPhase(1);
+  else if (phase == 1 && elapsed >= 2500) { pending = false; setPhase(2); }
+  else if (phase == 2 && elapsed >= 1000) setPhase(3);
+  else if (phase == 3) {
+    if ((elapsed / 300) % 2 == 0) tone(11, 750); else noTone(11);
+    if (elapsed >= 6000) setPhase(0);
   }
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Build & Troubleshooting Tips
-- **LED doesn't light up?** Verify polarity. The longer lead is the positive Anode (connect to resistor and Arduino pin); the flat side of the lens is the negative Cathode (connect to GND).
-- **Button triggers spontaneously?** Ensure the 10kΩ pull-down resistor connects between Pin D2 and GND. Without it, the pin "floats" and picks up electrical noise.
+1. Power over USB and verify only green is initially lit.
+2. Press the button: after at least three seconds of green, yellow lasts 2.5s, red clearance 1s and the red walking interval 6s with beeps.
+3. Verify green and red never appear together; hold the button and confirm it does not generate endless requests.
+4. Repeat a new press during each phase and inspect the behaviour described above.
 
----
+## Extension
 
-## 7. Innovation Challenges
-1. Add an extra Red and Green LED pair to act as the explicit "Walk / Don't Walk" pedestrian sign.
-2. Incorporate the club's [16x2 I2C LCD](https://www.duino.lk/product/lcd-16x02-display-blue/) to display a countdown timer: `"WALK: 10s... 9s..."`.
+Add explicit pedestrian walk/stop LEDs. A true intersection needs separate road groups and an all-red phase.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.

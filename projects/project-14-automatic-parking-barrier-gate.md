@@ -1,138 +1,115 @@
-# Project 14: Smart Car Park Barrier Gate with Sonar & Indicator Lights
+# Project 14: Two-Sensor Model Parking Barrier
 
-**Track:** Sensor Measurement & Physical Mechatronics  
-**Difficulty Level:** Intermediate (Grades 7–10)  
-**Estimated Time:** 60 Minutes  
-**Target Group:** 2 Students  
+**Platform:** Arduino Uno
 
----
+**Difficulty:** Intermediate
 
-## 1. Project Overview
-Automated toll gates and smart parking garages manage vehicle ingress using ultrasonic detection and motorized barrier arms. In this project, students construct a working scale model of an automated boom barrier. When an approaching vehicle car stops in front of the gate, an ultrasonic sensor detects presence, changes the overhead signal light from Red to Green, raises the barrier arm using an SG90 servo motor, waits for the car to drive through, and lowers the arm securely.
+**Estimated session:** 75–90 minutes
 
-```mermaid
-flowchart TD
-    Idle["Barrier Down (Red LED ON)"] --> Detect{"Car Approaching under 12cm?"}
-    Detect -->|Yes| Raise["Raise Barrier Arm: 0 to 90 degrees - Green LED ON"]
-    Raise --> DriveThrough["Wait for Car to Pass"]
-    DriveThrough --> ClearDelay["Safety Pause 2.5 Seconds"]
-    ClearDelay --> Lower["Lower Barrier Arm: 90 to 0 degrees - Red LED ON"]
-```
+**Group:** 2–3 students; shared inventory rotates between activities.
 
----
+**Revised:** 14 October 2026
 
-## 2. Learning Objectives (STEM Concepts)
-- **Transportation Engineering:** Traffic flow management, tolling systems, fail-safe barrier interlocks.
-- **Mechatronics:** Rotary-to-linear kinematic motion, servo horn alignment.
-- **Software State Machines:** Entry, transit, and exit verification cycles.
+## What students build
 
----
+One sonar detects an approaching model vehicle; a second monitors the model barrier zone against a fixed reference surface. The arm opens on approach and closes only after both zones give valid clear readings for 2.5 seconds. Invalid or occupied readings during closure reopen it. This demonstrates clearance interlocking with limited sonar coverage, not a real vehicle barrier.
 
-## 3. Bill of Materials
-| Item | Quantity | Source / Link |
-| :--- | :---: | :--- |
-| Arduino Compatible Uno R3 | 1 | [Duino.lk Uno R3](https://www.duino.lk/product/arduino-compatible-r3-atmega328p-ch340g/) |
-| HC-SR04 Ultrasonic Distance Sensor | 1 | [Duino.lk HC-SR04](https://www.duino.lk/product/ultrasonic-distance-measuring-transducer/) |
-| SG90 9g Micro Servo Motor | 1 | [Duino.lk SG90 Servo](https://www.duino.lk/product/servo-motor-sg90-9g/) |
-| 5mm Red LED & 5mm Green LED | 2 | [Duino.lk LEDs](https://www.duino.lk/product/1000pcs-3mm-red-water-clear-led-1-9-2-1vdc-packet/) |
-| 220Ω Resistors | 2 | [Duino.lk Resistors](https://www.duino.lk/product/2k-ohm-1-4w-smd-resistor-1206/) |
-| 60W Hot Melt Glue Gun & Popsicle stick (Gate arm) | 1 | [Duino.lk Glue Gun](https://www.duino.lk/product/60w-glue-gun-nozzle-sd-a6/) |
-| Breadboard 830 Tie Point | 1 | [Duino.lk Breadboard 830](https://www.duino.lk/product/breadboard-830-tie-point-16-5x5-5x0-85-cm/) |
+## Materials and preparation
 
----
+Use the items in the [revised procurement plan](../School_Electronics_Club_Procurement_Plan_LKR_50000.md). The club needs a computer and the correct USB **data** cable for programming. Disconnect power before changing wiring. These are classroom prototypes; hardware acceptance checks below still need to be performed.
 
-## 4. Hardware Wiring Table
+| Item from revised inventory | Quantity needed for this build |
+| :-- | :-- |
+| Uno and USB data cable | 1 |
+| HC-SR04 sensors | 2 |
+| SG90 with horn | 1 |
+| 5V/2A adapter and DC socket | 1 |
+| 470µF capacitor ≥10V | 1 |
+| red and green LEDs | 1 each |
+| 1kΩ resistors | 2 |
+| full breadboard/jumpers | 1 |
+| glue gun, 11mm sticks, light cardboard arm | shared |
 
-| Component Pin | Arduino Uno Pin | Purpose |
-| :--- | :--- | :--- |
-| **HC-SR04 TRIG** | Pin **D9** | Sonar pulse trigger |
-| **HC-SR04 ECHO** | Pin **D10** | Sonar pulse echo |
-| **SG90 Servo PWM** | Pin **D6** | 50Hz barrier arm position control |
-| **Red LED Anode** | Pin **D4** via 220Ω | STOP signal light |
-| **Green LED Anode** | Pin **D5** via 220Ω | GO signal light |
 
----
+## Complete wiring and power
 
-## 5. Arduino C++ Source Code
+Power the board through its USB socket. Power the SG90 red lead from the separate **regulated 5V/2A adapter** through its matching DC screw-terminal socket; brown goes to adapter negative. Join adapter negative to board GND. Only the servo signal connects to the listed GPIO. Do not join adapter +5V to the board's USB-derived 5V rail, micro:bit 3V, or Vin. Add a 470µF capacitor (rated at least 10V) across the servo supply near the servo, positive to +5V and negative to GND. Use short power wires and a lightweight, freely moving model. Check voltage and polarity before attaching the servo. If the board resets or the servo stalls, disconnect and correct supply/wiring/linkage before continuing.
+
+HC-SR04 VCC → board 5V; GND → board GND. These guides use 5V Uno/Nano boards. Never carry the 5V ECHO signal directly into a micro:bit. Each measurement has a timeout and readings outside 2–400cm are invalid; invalid does not mean “clear.” Wait at least 60ms between triggers on the same module; two-module builds alternate triggers at least 60ms apart to reduce crosstalk. Test your actual module against a flat target.
+
+| Device | Connection |
+| :-- | :-- |
+| Approach sonar TRIG/ECHO | D9/D10 |
+| Barrier-zone sonar TRIG/ECHO | D11/D12 |
+| Both sonar VCC/GND | Board 5V/GND |
+| Servo signal | D6 |
+| Red LED | D4 → 1kΩ → anode; cathode GND |
+| Green LED | D5 → 1kΩ → anode; cathode GND |
+
+Aim each sonar at a stable surface about 40–100cm away in its clear state. Position the clearance sensor so the cardboard vehicle interrupts that path under the arm. Separate their beams and trigger them alternately. No echo is a fault, not proof of clearance.
+
+## Complete source code
+
+Install **Servo 1.2.2 by Arduino** from Library Manager.
+
+Paste this entire sketch into Arduino IDE. Select **Arduino Uno** for the Uno or **Arduino Nano / ATmega328P** for a classic Nano; some CH340 Nano clones require the old bootloader setting. Use Arduino AVR Boards 1.8.6. SoftwareSerial is included in that core; install any additional libraries specified for this project below.
 
 ```cpp
-/*
- * Project 14: Smart Car Park Barrier Gate
- * Club: School Electronics & Innovation Club
- */
-
+#include <Arduino.h>
 #include <Servo.h>
-
-const int PIN_TRIG      = 9;
-const int PIN_ECHO      = 10;
-const int PIN_SERVO     = 6;
-const int PIN_LED_RED   = 4;
-const int PIN_LED_GREEN = 5;
-
-const int GATE_CLOSED = 0;  // Horizontal barrier arm
-const int GATE_OPEN   = 90; // Vertical barrier arm
-
-Servo barrierServo;
-
-float checkDistance() {
-  digitalWrite(PIN_TRIG, LOW);
-  delayMicroseconds(2);
-  digitalWrite(PIN_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PIN_TRIG, LOW);
-
-  long duration = pulseIn(PIN_ECHO, HIGH, 25000);
-  if (duration == 0) return 999.0;
-  return (duration * 0.0343) / 2.0;
+float distanceCM(byte trig, byte echo) {
+  digitalWrite(trig, LOW); delayMicroseconds(2);
+  digitalWrite(trig, HIGH); delayMicroseconds(10); digitalWrite(trig, LOW);
+  unsigned long us = pulseIn(echo, HIGH, 25000UL);
+  float cm = us * 0.0343f / 2.0f;
+  return (us == 0 || cm < 2 || cm > 400) ? -1.0f : cm;
 }
-
+Servo gate;
+const int DOWN=15, UP=95;
+float approach=-1, zone=-1;
+byte state=0, nextSensor=0; // closed, opening, open, closing
+int angle=DOWN;
+bool wasClear=false;
+unsigned long lastPing=0,lastMove=0,clearSince=0;
 void setup() {
-  pinMode(PIN_TRIG, OUTPUT);
-  pinMode(PIN_ECHO, INPUT);
-  pinMode(PIN_LED_RED, OUTPUT);
-  pinMode(PIN_LED_GREEN, OUTPUT);
-
-  barrierServo.attach(PIN_SERVO);
-  barrierServo.write(GATE_CLOSED);
-  digitalWrite(PIN_LED_RED, HIGH);
-  digitalWrite(PIN_LED_GREEN, LOW);
-
-  Serial.begin(9600);
-  Serial.println("Barrier Gate Ready.");
+  pinMode(9,OUTPUT); pinMode(10,INPUT); pinMode(11,OUTPUT); pinMode(12,INPUT);
+  pinMode(4,OUTPUT); pinMode(5,OUTPUT);
+  gate.attach(6); gate.write(DOWN); Serial.begin(9600);
 }
-
 void loop() {
-  float distance = checkDistance();
-
-  // If vehicle approaches within 12cm
-  if (distance > 2 && distance < 12) {
-    Serial.println("Vehicle approaching! Raising barrier...");
-    digitalWrite(PIN_LED_RED, LOW);
-    digitalWrite(PIN_LED_GREEN, HIGH);
-
-    // Raise barrier arm
-    barrierServo.write(GATE_OPEN);
-    delay(2000); // Wait for vehicle to begin passing
-
-    // Keep gate open while car is underneath
-    while (checkDistance() < 15) {
-      delay(200);
-    }
-    delay(1500); // Safety buffer to ensure tail clears
-
-    // Lower barrier
-    Serial.println("Vehicle cleared. Lowering barrier...");
-    barrierServo.write(GATE_CLOSED);
-    digitalWrite(PIN_LED_GREEN, LOW);
-    digitalWrite(PIN_LED_RED, HIGH);
-    delay(1000);
+  unsigned long now=millis();
+  if (now-lastPing>=70) {
+    lastPing=now;
+    if(nextSensor==0) approach=distanceCM(9,10); else zone=distanceCM(11,12);
+    nextSensor=1-nextSensor;
+    bool clear=approach>20 && zone>20;
+    if (!clear || !wasClear) clearSince=now;
+    wasClear=clear;
+    if(state==0 && approach>0 && approach<12) state=1;
+    if(state==3 && !clear) state=1;
+    if(state==2 && clear && now-clearSince>=2500) state=3;
+    if(approach<0 || zone<0) Serial.println("Sensor fault: closure inhibited");
   }
-
-  delay(100);
+  if(now-lastMove>=20) {
+    lastMove=now;
+    if(state==1) {angle=min(UP,angle+2); gate.write(angle); if(angle==UP) {state=2; clearSince=now;} }
+    else if(state==3) {angle=max(DOWN,angle-2); gate.write(angle); if(angle==DOWN) state=0; }
+  }
+  digitalWrite(4,state!=2); digitalWrite(5,state==2);
 }
 ```
 
----
+## Build, test and acceptance checks
 
-## 6. Innovation Challenges
-1. Combine with the [16x2 I2C LCD](https://www.duino.lk/product/lcd-16x02-display-blue/) to display `"AVAILABLE SLOTS: 04"`, automatically counting down as cars enter!
+1. Check external power, common grounds and sensor layout with the arm detached.
+2. Move a cardboard vehicle within 12cm of approach sonar: the arm should rise. Hold it in the barrier sensor path: the arm should remain up.
+3. Clear both paths to their reference surfaces and check the 2.5s delay before gradual closure.
+4. Interrupt either path or cause a missing echo while closing: the arm should reopen. Test crosstalk and blind spots with the model; keep fingers away from the linkage.
+
+## Extension
+
+Use direction-aware entry/exit sensing before attempting occupancy counting; one approach trigger cannot reliably count parking slots.
+
+## Verification status
+
+The wiring and code have been revised to address the feasibility review. Software checks and their limits are recorded in [VALIDATION.md](../VALIDATION.md). Physical testing of the exact purchased parts is still required before a student session.
